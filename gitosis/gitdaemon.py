@@ -1,32 +1,48 @@
+"""
+Gitosis git-daemon functionality.
+
+Handles the ``git-daemon-export-ok`` marker files for all repositories managed
+by Gitosis.
+"""
 import errno
 import logging
 import os
 
 from ConfigParser import NoSectionError, NoOptionError
 
+# C0103 - 'log' is a special name
+# pylint: disable-msg=C0103
 log = logging.getLogger('gitosis.gitdaemon')
 
 from gitosis import util
 
 def export_ok_path(repopath):
-    p = os.path.join(repopath, 'git-daemon-export-ok')
-    return p
+    """
+    Return the path the ``git-daemon-export-ok`` marker for a given repository.
+    """
+    path = os.path.join(repopath, 'git-daemon-export-ok')
+    return path
 
 def allow_export(repopath):
-    p = export_ok_path(repopath)
-    file(p, 'a').close()
+    """Create the ``git-daemon-export-ok`` marker for a given repository."""
+    path = export_ok_path(repopath)
+    file(path, 'a').close()
 
 def deny_export(repopath):
-    p = export_ok_path(repopath)
+    """Remove the ``git-daemon-export-ok`` marker for a given repository."""
+    path = export_ok_path(repopath)
     try:
-        os.unlink(p)
-    except OSError, e:
-        if e.errno == errno.ENOENT:
+        os.unlink(path)
+    except OSError, ex:
+        if ex.errno == errno.ENOENT:
             pass
         else:
             raise
 
 def _extract_reldir(topdir, dirpath):
+    """
+    Find the relative directory given a base directory & a child directory.
+    """
     if topdir == dirpath:
         return '.'
     prefix = topdir + '/'
@@ -34,9 +50,10 @@ def _extract_reldir(topdir, dirpath):
     reldir = dirpath[len(prefix):]
     return reldir
 
-def set_export_ok(config):
-    repositories = util.getRepositoryDir(config)
-
+def _is_global_repo_export_ok(config):
+    """
+    Does the global Gitosis configuration allow daemon exporting?
+    """
     try:
         global_enable = config.getboolean('gitosis', 'daemon')
     except (NoSectionError, NoOptionError):
@@ -45,14 +62,47 @@ def set_export_ok(config):
         'Global default is %r',
         {True: 'allow', False: 'deny'}.get(global_enable),
         )
+    return global_enable
 
-    def _error(e):
-        if e.errno == errno.ENOENT:
+def _is_repo_export_ok(global_enable, config, name):
+    """
+    Does the Gitosis configuration for the named reposistory allow daemon
+    exporting?
+    """
+    try:
+        enable = config.getboolean('repo %s' % name, 'daemon')
+    except (NoSectionError, NoOptionError):
+        enable = global_enable
+    return enable
+
+def _set_export_ok_single(enable, name, dirpath, repo):
+    """
+    Manage the ``git-daemon-export-ok`` marker for a single repository.
+    """
+    repopath = os.path.join(dirpath, repo)
+    if enable:
+        log.debug('Allow %r', name)
+        allow_export(repopath)
+    else:
+        log.debug('Deny %r', name)
+        deny_export(repopath)
+
+def set_export_ok(config):
+    """
+    Walk all repositories owned by Gitosis, and manage the
+    ``git-daemon-export-ok`` markers.
+    """
+    repositories = util.getRepositoryDir(config)
+    global_enable = _is_global_repo_export_ok(config)
+
+    def _error(ex):
+        """Ignore non-existant items."""
+        if ex.errno == errno.ENOENT:
             pass
         else:
-            raise e
+            raise ex
 
-    for (dirpath, dirnames, filenames) \
+    for (dirpath, dirnames, _) \
             in os.walk(repositories, onerror=_error):
         # oh how many times i have wished for os.walk to report
         # topdir and reldir separately, instead of dirpath
@@ -77,14 +127,6 @@ def set_export_ok(config):
             if reldir != '.':
                 name = os.path.join(reldir, name)
             assert ext == '.git'
-            try:
-                enable = config.getboolean('repo %s' % name, 'daemon')
-            except (NoSectionError, NoOptionError):
-                enable = global_enable
-
-            if enable:
-                log.debug('Allow %r', name)
-                allow_export(os.path.join(dirpath, repo))
-            else:
-                log.debug('Deny %r', name)
-                deny_export(os.path.join(dirpath, repo))
+            
+            enable = _is_repo_export_ok(global_enable, config, name)
+            _set_export_ok_single(enable, name, dirpath, repo)
