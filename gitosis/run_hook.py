@@ -16,11 +16,21 @@ from gitosis import app
 from gitosis import util
 
 def post_update(cfg, git_dir):
+    """
+    post-update hook for the Gitosis admin directory.
+
+    1. Make an export of the admin repo to a clean directory.
+    2. Move the gitosis.conf file to it's destination.
+    3. Update the repository descriptions.
+    4. Update the projects.list file.
+    5. Update the repository export markers.
+    6. Update the Gitosis SSH keys.
+    """
     export = os.path.join(git_dir, 'gitosis-export')
     try:
         shutil.rmtree(export)
-    except OSError, e:
-        if e.errno == errno.ENOENT:
+    except OSError, ex:
+        if ex.errno == errno.ENOENT:
             pass
         else:
             raise
@@ -46,7 +56,13 @@ def post_update(cfg, git_dir):
         )
 
 class Main(app.App):
+    """gitosis-run-hook program."""
+    # W0613 - They also might ignore arguments here, where the descendant
+    # methods won't.
+    # pylint: disable-msg=W0613
+
     def create_parser(self):
+        """Declare the input for this program."""
         parser = super(Main, self).create_parser()
         parser.set_usage('%prog [OPTS] HOOK')
         parser.set_description(
@@ -54,6 +70,7 @@ class Main(app.App):
         return parser
 
     def handle_args(self, parser, cfg, options, args):
+        """Parse the input for this program."""
         try:
             (hook,) = args
         except ValueError:
