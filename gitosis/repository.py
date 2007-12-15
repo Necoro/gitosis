@@ -1,4 +1,6 @@
-import errno
+"""
+Gitosis functions for dealing with Git repositories.
+"""
 import os
 import re
 import subprocess
@@ -121,13 +123,8 @@ class GitCheckoutIndexError(GitExportError):
     """git checkout-index failed"""
 
 def export(git_dir, path):
-    try:
-        os.mkdir(path)
-    except OSError, e:
-        if e.errno == errno.EEXIST:
-            pass
-        else:
-            raise
+    """Export a Git repository to a given path."""
+    util.mkdir(path)
     returncode = subprocess.call(
         args=[
             'git',
@@ -166,6 +163,7 @@ class GitRevParseError(GitError):
     """rev-parse failed"""
 
 def has_initial_commit(git_dir):
+    """Check if a Git repo contains at least one commit linked by HEAD."""
     child = subprocess.Popen(
         args=[
             'git',
