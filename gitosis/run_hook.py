@@ -2,11 +2,9 @@
 Perform gitosis actions for a git hook.
 """
 
-import errno
 import logging
 import os
 import sys
-import shutil
 
 from gitosis import repository
 from gitosis import ssh
