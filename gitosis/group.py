@@ -1,14 +1,27 @@
+"""
+Gitosis functions to find what groups a given user belongs to.
+"""
 import logging
 from ConfigParser import NoSectionError, NoOptionError
+        
+_GROUP_PREFIX = 'group '
 
 def _getMembership(config, user, seen):
+    """
+    Internal implementation of getMembership.
+    Generate groups ``user`` is member of, according to ``config``.
+    Groups already seen are tracked by ``seen``.
+
+    :type config: RawConfigParser
+    :type user: str
+    :type seen: Set
+    """
     log = logging.getLogger('gitosis.group.getMembership')
 
     for section in config.sections():
-        GROUP_PREFIX = 'group '
-        if not section.startswith(GROUP_PREFIX):
+        if not section.startswith(_GROUP_PREFIX):
             continue
-        group = section[len(GROUP_PREFIX):]
+        group = section[len(_GROUP_PREFIX):]
         if group in seen:
             continue
 
@@ -39,7 +52,6 @@ def getMembership(config, user):
 
     :type config: RawConfigParser
     :type user: str
-    :param _seen: internal use only
     """
 
     seen = set()
