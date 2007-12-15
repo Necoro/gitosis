@@ -8,8 +8,6 @@ import errno
 import logging
 import os
 
-from ConfigParser import NoSectionError, NoOptionError
-
 # C0103 - 'log' is a special name
 # pylint: disable-msg=C0103
 log = logging.getLogger('gitosis.gitdaemon')
@@ -55,7 +53,7 @@ def _is_global_repo_export_ok(config):
     """
     Does the global Gitosis configuration allow daemon exporting?
     """
-	global_enable = getboolean_default(config, 'gitosis', 'daemon', False)
+    global_enable = getboolean_default(config, 'gitosis', 'daemon', False)
     log.debug(
         'Global default is %r',
         {True: 'allow', False: 'deny'}.get(global_enable),
@@ -67,8 +65,8 @@ def _is_repo_export_ok(global_enable, config, reponame):
     Does the Gitosis configuration for the named reposistory allow daemon
     exporting?
     """
-	section = 'repo %s' % reponame
-	return getboolean_default(config, section, 'daemon', global_enable)
+    section = 'repo %s' % reponame
+    return getboolean_default(config, section, 'daemon', global_enable)
 
 def _set_export_ok_single(enable, name, dirpath, repo):
     """
