@@ -27,13 +27,7 @@ def post_update(cfg, git_dir):
     6. Update the Gitosis SSH keys.
     """
     export = os.path.join(git_dir, 'gitosis-export')
-    try:
-        shutil.rmtree(export)
-    except OSError, ex:
-        if ex.errno == errno.ENOENT:
-            pass
-        else:
-            raise
+    util.rmtree(export)
     repository.export(git_dir=git_dir, path=export)
     os.rename(
         os.path.join(export, 'gitosis.conf'),

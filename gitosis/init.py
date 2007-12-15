@@ -52,13 +52,7 @@ def initial_commit(git_dir, cfg, pubkey, user):
 def symlink_config(git_dir):
     dst = os.path.expanduser('~/.gitosis.conf')
     tmp = '%s.%d.tmp' % (dst, os.getpid())
-    try:
-        os.unlink(tmp)
-    except OSError, e:
-        if e.errno == errno.ENOENT:
-            pass
-        else:
-            raise
+    util.unlink(tmp)
     os.symlink(
         os.path.join(git_dir, 'gitosis.conf'),
         tmp,

@@ -30,13 +30,7 @@ def allow_export(repopath):
 def deny_export(repopath):
     """Remove the ``git-daemon-export-ok`` marker for a given repository."""
     path = export_ok_path(repopath)
-    try:
-        os.unlink(path)
-    except OSError, ex:
-        if ex.errno == errno.ENOENT:
-            pass
-        else:
-            raise
+    util.unlink(path)
 
 def _extract_reldir(topdir, dirpath):
     """

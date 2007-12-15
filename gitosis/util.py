@@ -3,6 +3,7 @@ Some utility functions for Gitosis
 """
 import errno
 import os
+import shutil
 from ConfigParser import NoSectionError, NoOptionError
 
 def mkdir(newdir, mode=0777):
@@ -13,6 +14,30 @@ def mkdir(newdir, mode=0777):
         os.mkdir(newdir, mode)
     except OSError, ex:
         if ex.errno == errno.EEXIST:
+            pass
+        else:
+            raise
+
+def unlink(filename):
+    """
+        Like os.unlink, but non-existing files do not raise an error.
+    """
+    try:
+        os.unlink(filename)
+    except OSError, ex:
+        if ex.errno == errno.ENOENT:
+            pass
+        else:
+            raise
+
+def rmtree(directory):
+    """
+        Like shutil.rmtree, but non-existing trees do not raise an error.
+    """
+    try:
+        shutil.rmtree(directory)
+    except OSError, ex:
+        if ex.errno == errno.ENOENT:
             pass
         else:
             raise
