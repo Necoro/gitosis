@@ -2,7 +2,6 @@
 Initialize a user account for use with gitosis.
 """
 
-import errno
 import logging
 import os
 import sys
@@ -17,9 +16,12 @@ from gitosis import ssh
 from gitosis import util
 from gitosis import app
 
+# C0103 - 'log' is a special name
+# pylint: disable-msg=C0103
 log = logging.getLogger('gitosis.init')
 
 def read_ssh_pubkey(fp=None):
+    """Read an SSH public key from stdin."""
     if fp is None:
         fp = sys.stdin
     line = fp.readline()
@@ -32,6 +34,7 @@ class InsecureSSHKeyUsername(Exception):
         return '%s: %s' % (self.__doc__, ': '.join(self.args))
 
 def ssh_extract_user(pubkey):
+    """Find the username for a given SSH public key line."""
     _, user = pubkey.rsplit(None, 1)
     if ssh.isSafeUsername(user):
         return user
@@ -39,6 +42,7 @@ def ssh_extract_user(pubkey):
         raise InsecureSSHKeyUsername(repr(user))
 
 def initial_commit(git_dir, cfg, pubkey, user):
+    """Import the initial files into the gitosis-admin repository."""
     repository.fast_import(
         git_dir=git_dir,
         commit_msg='Automatic creation of gitosis repository.',
@@ -50,6 +54,10 @@ def initial_commit(git_dir, cfg, pubkey, user):
         )
 
 def symlink_config(git_dir):
+    """
+    Place a symlink for the gitosis.conf file in the homedir of the gitosis
+    user, to make possible to find initially.
+    """
     dst = os.path.expanduser('~/.gitosis.conf')
     tmp = '%s.%d.tmp' % (dst, os.getpid())
     util.unlink(tmp)
@@ -59,11 +67,8 @@ def symlink_config(git_dir):
         )
     os.rename(tmp, dst)
 
-def init_admin_repository(
-    git_dir,
-    pubkey,
-    user,
-    ):
+def init_admin_repository(git_dir, pubkey, user):
+    """Create the initial gitosis-admin reposistory."""
     repository.init(
         path=git_dir,
         template=resource_filename('gitosis.templates', 'admin')
@@ -76,8 +81,8 @@ def init_admin_repository(
         # ConfigParser does not guarantee order, so jump through hoops
         # to make sure [gitosis] is first
         cfg_file = StringIO()
-        print >>cfg_file, '[gitosis]'
-        print >>cfg_file
+        print >> cfg_file, '[gitosis]'
+        print >> cfg_file
         cfg = RawConfigParser()
         cfg.add_section('group gitosis-admin')
         cfg.set('group gitosis-admin', 'members', user)
@@ -91,21 +96,30 @@ def init_admin_repository(
             )
 
 class Main(app.App):
+    """gitosis-init program."""
+    # W0613 - They also might ignore arguments here, where the descendant
+    # methods won't.
+    # pylint: disable-msg=W0613
+
     def create_parser(self):
+        """Declare the input for this program."""
         parser = super(Main, self).create_parser()
         parser.set_usage('%prog [OPTS]')
         parser.set_description(
             'Initialize a user account for use with gitosis')
         return parser
 
-    def read_config(self, *a, **kw):
-        # ignore errors that result from non-existent config file
+    def read_config(self, options, cfg):
+        """Ignore errors that result from non-existent config file."""
+		# Pylint gets it wrong.
+		# pylint: disable-msg=W0704
         try:
-            super(Main, self).read_config(*a, **kw)
+            super(Main, self).read_config(options, cfg)
         except app.ConfigFileDoesNotExistError:
             pass
 
     def handle_args(self, parser, cfg, options, args):
+        """Parse the input for this program."""
         super(Main, self).handle_args(parser, cfg, options, args)
 
         os.umask(0022)
