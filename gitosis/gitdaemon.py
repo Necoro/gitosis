@@ -15,6 +15,7 @@ from ConfigParser import NoSectionError, NoOptionError
 log = logging.getLogger('gitosis.gitdaemon')
 
 from gitosis import util
+from gitosis.configutil import getboolean_default
 
 def export_ok_path(repopath):
     """
@@ -54,26 +55,20 @@ def _is_global_repo_export_ok(config):
     """
     Does the global Gitosis configuration allow daemon exporting?
     """
-    try:
-        global_enable = config.getboolean('gitosis', 'daemon')
-    except (NoSectionError, NoOptionError):
-        global_enable = False
+	global_enable = getboolean_default(config, 'gitosis', 'daemon', False)
     log.debug(
         'Global default is %r',
         {True: 'allow', False: 'deny'}.get(global_enable),
         )
     return global_enable
 
-def _is_repo_export_ok(global_enable, config, name):
+def _is_repo_export_ok(global_enable, config, reponame):
     """
     Does the Gitosis configuration for the named reposistory allow daemon
     exporting?
     """
-    try:
-        enable = config.getboolean('repo %s' % name, 'daemon')
-    except (NoSectionError, NoOptionError):
-        enable = global_enable
-    return enable
+	section = 'repo %s' % reponame
+	return getboolean_default(config, section, 'daemon', global_enable)
 
 def _set_export_ok_single(enable, name, dirpath, repo):
     """
