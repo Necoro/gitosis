@@ -1,3 +1,6 @@
+"""
+Gitosis access control functions
+"""
 import os, logging
 from ConfigParser import NoSectionError, NoOptionError
 
