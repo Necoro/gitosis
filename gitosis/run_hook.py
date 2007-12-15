@@ -13,6 +13,26 @@ from gitosis import gitdaemon
 from gitosis import app
 from gitosis import util
 
+def build_reposistory_data(config):
+    """
+    Using the ``config`` data, perform all actions that affect files in the .git
+    repositories, such as the description, owner, and export marker. Also
+    update the projects.list file as needed to list relevant repositories.
+
+	:type config: RawConfigParser
+    """
+    gitweb.set_descriptions(
+        config=config,
+        )
+    generated = util.getGeneratedFilesDir(config=config)
+    gitweb.generate_project_list(
+        config=config,
+        path=os.path.join(generated, 'projects.list'),
+        )
+    gitdaemon.set_export_ok(
+        config=config,
+        )
+
 def post_update(cfg, git_dir):
     """
     post-update hook for the Gitosis admin directory.
@@ -31,17 +51,7 @@ def post_update(cfg, git_dir):
         os.path.join(export, 'gitosis.conf'),
         os.path.join(export, '..', 'gitosis.conf'),
         )
-    gitweb.set_descriptions(
-        config=cfg,
-        )
-    generated = util.getGeneratedFilesDir(config=cfg)
-    gitweb.generate_project_list(
-        config=cfg,
-        path=os.path.join(generated, 'projects.list'),
-        )
-    gitdaemon.set_export_ok(
-        config=cfg,
-        )
+    build_reposistory_data(cfg)
     ssh.writeAuthorizedKeys(
         path=os.path.expanduser('~/.ssh/authorized_keys'),
         keydir=os.path.join(export, 'keydir'),
