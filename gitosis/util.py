@@ -10,7 +10,7 @@ def mkdir(newdir, mode=0777):
     """
         Like os.mkdir, but already existing directories do not raise an error.
     """
-    _sysfunc(os.mkdir, [errno.EEXIST], newdir, mode=mode)
+    _sysfunc(os.mkdir, [errno.EEXIST], newdir, mode)
 
 def unlink(filename):
     """
@@ -32,7 +32,7 @@ def _sysfunc(func, ignore, *args, **kwds):
     if not ignore:
         ignore = []
     try:
-        func(args, kwds)
+        func(*args, **kwds)
     except OSError, ex:
         if ex.errno in ignore:
             pass
