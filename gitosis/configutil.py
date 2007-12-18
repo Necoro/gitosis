@@ -5,8 +5,8 @@ from ConfigParser import NoSectionError, NoOptionError
 
 def getboolean_default(config, section, option, default_value):
     """
-	Return the given section.variable, or return the default if no specific
-	value is set.
+    Return the given section.variable, or return the default if no specific
+    value is set.
     """
     try:
         value = config.getboolean(section, option)

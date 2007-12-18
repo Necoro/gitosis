@@ -111,8 +111,8 @@ class Main(app.App):
 
     def read_config(self, options, cfg):
         """Ignore errors that result from non-existent config file."""
-		# Pylint gets it wrong.
-		# pylint: disable-msg=W0704
+        # Pylint gets it wrong.
+        # pylint: disable-msg=W0704
         try:
             super(Main, self).read_config(options, cfg)
         except app.ConfigFileDoesNotExistError:

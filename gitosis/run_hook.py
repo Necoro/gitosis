@@ -19,7 +19,7 @@ def build_reposistory_data(config):
     repositories, such as the description, owner, and export marker. Also
     update the projects.list file as needed to list relevant repositories.
 
-	:type config: RawConfigParser
+    :type config: RawConfigParser
     """
     gitweb.set_descriptions(
         config=config,

@@ -46,16 +46,16 @@ def generateAuthorizedKeys(keys):
     Genarate the lines for the Gitosis ~/.ssh/authorized_keys.
     """
     TEMPLATE = ('command="gitosis-serve %(user)s",no-port-forwarding,'
-				+'no-X11-forwarding,no-agent-forwarding,no-pty %(key)s')
+                +'no-X11-forwarding,no-agent-forwarding,no-pty %(key)s')
 
     yield COMMENT
     for (user, key) in keys:
         yield TEMPLATE % dict(user=user, key=key)
 
 _COMMAND_RE = re.compile('^command="(/[^ "]+/)?gitosis-serve [^"]+",'
-						 +'no-port-forwarding,no-X11-forwarding,'
-						 +'no-agent-forwarding,no-pty'
-						 +' .*')
+                         +'no-port-forwarding,no-X11-forwarding,'
+                         +'no-agent-forwarding,no-pty'
+                         +' .*')
 
 def filterAuthorizedKeys(fp):
     """
