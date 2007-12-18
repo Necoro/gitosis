@@ -10,34 +10,31 @@ def mkdir(newdir, mode=0777):
     """
         Like os.mkdir, but already existing directories do not raise an error.
     """
-    try:
-        os.mkdir(newdir, mode)
-    except OSError, ex:
-        if ex.errno == errno.EEXIST:
-            pass
-        else:
-            raise
+    _sysfunc(os.mkdir, [errno.EEXIST], newdir, mode=mode)
 
 def unlink(filename):
     """
         Like os.unlink, but non-existing files do not raise an error.
     """
-    try:
-        os.unlink(filename)
-    except OSError, ex:
-        if ex.errno == errno.ENOENT:
-            pass
-        else:
-            raise
+    _sysfunc(os.unlink, [errno.ENOENT], filename)
 
 def rmtree(directory):
     """
         Like shutil.rmtree, but non-existing trees do not raise an error.
     """
+    _sysfunc(shutil.rmtree, [errno.ENOENT], directory)
+
+def _sysfunc(func, ignore, *args, **kwds):
+    """
+    Run the specified function, ignoring the specified errno if raised, and
+    raising other errors.
+    """
+    if not ignore:
+        ignore = []
     try:
-        shutil.rmtree(directory)
+        func(args, kwds)
     except OSError, ex:
-        if ex.errno == errno.ENOENT:
+        if ex.errno in ignore:
             pass
         else:
             raise
