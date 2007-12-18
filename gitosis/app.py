@@ -81,7 +81,7 @@ class App(object):
                 # ignore this particular error case
                 raise ConfigFileDoesNotExistError(str(ex))
             else:
-                raise CannotReadConfigError(str(ex))
+                raise CannotReadConfigError(str(ex)) #pragma: no cover
         try:
             cfg.readfp(conffile)
         finally:
@@ -107,7 +107,7 @@ class App(object):
             else:
                 logging.root.setLevel(symbolic)
 
-    def handle_args(self, parser, cfg, options, args):
+    def handle_args(self, parser, cfg, options, args): #pragma: no cover
         """Abstract method for the non-option argument handling."""
         if args:
             parser.error('not expecting arguments')

@@ -33,7 +33,7 @@ def build_reposistory_data(config):
         config=config,
         )
 
-def post_update(cfg, git_dir):
+def post_update(cfg, git_dir): #pragma: no cover
     """
     post-update hook for the Gitosis admin directory.
 
@@ -71,7 +71,7 @@ class Main(app.App):
             'Perform gitosis actions for a git hook')
         return parser
 
-    def handle_args(self, parser, cfg, options, args):
+    def handle_args(self, parser, cfg, options, args): #pragma: no cover
         """Parse the input for this program."""
         try:
             (hook,) = args

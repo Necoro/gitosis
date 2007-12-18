@@ -135,7 +135,7 @@ class Main(app.App):
             'Allow restricted git operations under DIR')
         return parser
 
-    def handle_args(self, parser, cfg, options, args):
+    def handle_args(self, parser, cfg, options, args): #pragma: no cover
         """Parse the input for this program."""
         try:
             (user,) = args

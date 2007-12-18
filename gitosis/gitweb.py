@@ -136,7 +136,7 @@ def set_descriptions(config):
         except (NoSectionError, NoOptionError):
             continue
 
-        if not description:
+        if not description: #pragma: no cover
             continue
 
         name = sectiontitle[1]

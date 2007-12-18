@@ -1,6 +1,9 @@
 from nose.tools import eq_ as eq, assert_raises
 
 from gitosis import app
+from gitosis import init
+from gitosis import run_hook
+from gitosis import serve
 import sys
 import os
 
@@ -69,6 +72,25 @@ def test_app_setup_logging_badname():
     cfg.add_section('gitosis')
     cfg.set('gitosis', 'loglevel', 'FOOBAR')
     main.setup_logging(cfg)
+
+def test_appinit_create_parser():
+    main = init.Main()
+    parser = main.create_parser()
+
+def test_appinit_read_config():
+    main = init.Main()
+    cfg = main.create_config(None)
+    parser = main.create_parser()
+    (options, args) = parser.parse_args(['--config=/does/not/exist'])
+    main.read_config(options, cfg)
+
+def test_apprunhook_create_parser():
+    main = run_hook.Main()
+    parser = main.create_parser()
+
+def test_appserve_create_parser():
+    main = serve.Main()
+    parser = main.create_parser()
 
 # We must call this test last
 def test_zzz_app_main():

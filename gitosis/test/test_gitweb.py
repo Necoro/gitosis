@@ -223,22 +223,22 @@ def test_description_again():
     got = readFile(os.path.join(path, 'description'))
     eq(got, 'foodesc\n')
 
-def test_escape_filename_normal()
-	i = 'abc'
-	eq(gitweb._escape_filename(i), 'abc')
+def test_escape_filename_normal():
+    i = 'abc'
+    eq(gitweb._escape_filename(i), 'abc')
 
-def test_escape_filename_slashone()
-	i = 'ab\\c'
-	eq(gitweb._escape_filename(i), 'ab\\\\c')
+def test_escape_filename_slashone():
+    i = 'ab\\c'
+    eq(gitweb._escape_filename(i), 'ab\\\\c')
 
-def test_escape_filename_slashtwo()
-	i = 'ab\\\\c'
-	eq(gitweb._escape_filename(i), 'ab\\\\\\\\c')
+def test_escape_filename_slashtwo():
+    i = 'ab\\\\c'
+    eq(gitweb._escape_filename(i), 'ab\\\\\\\\c')
 
-def test_escape_filename_dollar()
-	i = 'abc$'
-	eq(gitweb._escape_filename(i), 'abc\\$')
+def test_escape_filename_dollar():
+    i = 'abc$'
+    eq(gitweb._escape_filename(i), 'abc\\$')
 
-def test_escape_filename_quote()
-	i = 'abc"'
-	eq(gitweb._escape_filename(i), 'abc\\"')
+def test_escape_filename_quote():
+    i = 'abc"'
+    eq(gitweb._escape_filename(i), 'abc\\"')

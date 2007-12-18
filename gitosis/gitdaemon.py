@@ -82,7 +82,7 @@ def set_export_ok(config):
     repositories = util.getRepositoryDir(config)
     global_enable = _is_global_repo_export_ok(config)
 
-    def _error(ex):
+    def _error(ex): #pragma: no cover
         """Ignore non-existant items."""
         if ex.errno == errno.ENOENT:
             pass

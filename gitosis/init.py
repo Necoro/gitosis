@@ -20,7 +20,7 @@ from gitosis import app
 # pylint: disable-msg=C0103
 log = logging.getLogger('gitosis.init')
 
-def read_ssh_pubkey(fp=None):
+def read_ssh_pubkey(fp=None): #pragma: no cover
     """Read an SSH public key from stdin."""
     if fp is None:
         fp = sys.stdin
@@ -53,7 +53,7 @@ def initial_commit(git_dir, cfg, pubkey, user):
             ],
         )
 
-def symlink_config(git_dir):
+def symlink_config(git_dir): #pragma: no cover
     """
     Place a symlink for the gitosis.conf file in the homedir of the gitosis
     user, to make possible to find initially.
@@ -118,7 +118,7 @@ class Main(app.App):
         except app.ConfigFileDoesNotExistError:
             pass
 
-    def handle_args(self, parser, cfg, options, args):
+    def handle_args(self, parser, cfg, options, args): #pragma: no cover
         """Parse the input for this program."""
         super(Main, self).handle_args(parser, cfg, options, args)
 

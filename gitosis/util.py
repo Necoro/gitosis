@@ -29,7 +29,7 @@ def _sysfunc(func, ignore, *args, **kwds):
     Run the specified function, ignoring the specified errno if raised, and
     raising other errors.
     """
-    if not ignore:
+    if not ignore: # pragma: no cover
         ignore = []
     try:
         func(*args, **kwds)
