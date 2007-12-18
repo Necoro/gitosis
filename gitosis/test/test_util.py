@@ -44,3 +44,22 @@ def test_getRepositoryDir_cfg_absolute():
     cfg.set('gitosis', 'repositories', '/var/gitroot')
     d = util.getRepositoryDir(cfg)
     eq(d, '/var/gitroot')
+
+def test_getGeneratedFilesDir_cfg_missing():
+    cfg = RawConfigParser()
+    d = util.getGeneratedFilesDir(cfg)
+    eq(d, os.path.expanduser('~/gitosis'))
+
+def test_getGeneratedFilesDir_cfg_empty():
+    cfg = RawConfigParser()
+    cfg.add_section('gitosis')
+    cfg.set('gitosis', 'generate-files-in', '')
+    d = util.getGeneratedFilesDir(cfg)
+    eq(d, '')
+
+def test_getGeneratedFilesDir_cfg_set():
+    cfg = RawConfigParser()
+    cfg.add_section('gitosis')
+    cfg.set('gitosis', 'generate-files-in', 'foobar')
+    d = util.getGeneratedFilesDir(cfg)
+    eq(d, 'foobar')
