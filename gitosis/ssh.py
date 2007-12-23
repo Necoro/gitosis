@@ -17,6 +17,20 @@ def isSafeUsername(user):
     match = _ACCEPTABLE_USER_RE.match(user)
     return (match is not None)
 
+class InsecureSSHKeyUsername(Exception):
+    """Username contains not allowed characters"""
+
+    def __str__(self):
+        return '%s: %s' % (self.__doc__, ': '.join(self.args))
+
+def extract_user(pubkey):
+    """Find the username for a given SSH public key line."""
+    _, user = pubkey.rsplit(None, 1)
+    if isSafeUsername(user):
+        return user
+    else:
+        raise InsecureSSHKeyUsername(repr(user))
+
 def readKeys(keydir):
     """
     Read SSH public keys from ``keydir/*.pub``

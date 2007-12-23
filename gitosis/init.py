@@ -27,20 +27,6 @@ def read_ssh_pubkey(fp=None): #pragma: no cover
     line = fp.readline()
     return line
 
-class InsecureSSHKeyUsername(Exception):
-    """Username contains not allowed characters"""
-
-    def __str__(self):
-        return '%s: %s' % (self.__doc__, ': '.join(self.args))
-
-def ssh_extract_user(pubkey):
-    """Find the username for a given SSH public key line."""
-    _, user = pubkey.rsplit(None, 1)
-    if ssh.isSafeUsername(user):
-        return user
-    else:
-        raise InsecureSSHKeyUsername(repr(user))
-
 def initial_commit(git_dir, cfg, pubkey, user):
     """Import the initial files into the gitosis-admin repository."""
     repository.fast_import(
@@ -126,7 +112,7 @@ class Main(app.App):
 
         log.info('Reading SSH public key...')
         pubkey = read_ssh_pubkey()
-        user = ssh_extract_user(pubkey)
+        user = ssh.extract_user(pubkey)
         if user is None:
             log.error('Cannot parse user from SSH public key.')
             sys.exit(1)
