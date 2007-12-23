@@ -52,10 +52,26 @@ def generateAuthorizedKeys(keys):
     for (user, key) in keys:
         yield TEMPLATE % dict(user=user, key=key)
 
-_COMMAND_RE = re.compile('^command="(/[^ "]+/)?gitosis-serve [^"]+",'
-                         +'no-port-forwarding,no-X11-forwarding,'
-                         +'no-agent-forwarding,no-pty'
-                         +' .*')
+#Protocol 1 public keys consist of the following space-separated fields: options, bits, exponent, modulus, comment. 
+#Protocol 2 public key consist of: options, keytype, base64-encoded key, comment.
+_COMMAND_OPTS_SAFE_CMD = \
+  'command="(/[^ "]+/)?gitosis-serve [^"]+"'
+_COMMAND_OPTS_SAFE = \
+  'no-port-forwarding' \
++'|no-X11-forwarding' \
++'|no-agent-forwarding' \
++'|no-pty' \
++'|from="[^"]*"'
+_COMMAND_OPTS_UNSAFE = \
+  'environment="[^"]*"' \
++'|command="[^"]*"' \
++'|permitopen="[^"]*"' \
++'|tunnel="[^"]+"'
+
+_COMMAND_RE = re.compile(
+	'^'+_COMMAND_OPTS_SAFE_CMD \
+	+'(,('+_COMMAND_OPTS_SAFE+'))+' \
+	+' .*')
 
 def filterAuthorizedKeys(fp):
     """
