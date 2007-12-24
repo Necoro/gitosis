@@ -55,7 +55,7 @@ def symlink_config(git_dir): #pragma: no cover
         )
     os.rename(tmp, dst)
 
-def init_admin_repository(git_dir, pubkey, user):
+def init_admin_repository(git_dir, pubkey, user, config):
     """Create the initial gitosis-admin reposistory."""
     repository.init(
         path=git_dir,
@@ -64,18 +64,22 @@ def init_admin_repository(git_dir, pubkey, user):
     repository.init(
         path=git_dir,
         )
+    if config.has_section('gitosis') and \
+       config.has_section('group gitosis-admin') and \
+       config.has_option('group gitosis-admin', 'writable'):
+       pass
+    else:
+        config = RawConfigParser()
+        config.add_section('gitosis')
+        config.add_section('group gitosis-admin')
+        config.set('group gitosis-admin', 'members', user)
+        config.set('group gitosis-admin', 'writable', 'gitosis-admin')
     if not repository.has_initial_commit(git_dir):
         log.info('Making initial commit...')
         # ConfigParser does not guarantee order, so jump through hoops
         # to make sure [gitosis] is first
         cfg_file = StringIO()
-        print >> cfg_file, '[gitosis]'
-        print >> cfg_file
-        cfg = RawConfigParser()
-        cfg.add_section('group gitosis-admin')
-        cfg.set('group gitosis-admin', 'members', user)
-        cfg.set('group gitosis-admin', 'writable', 'gitosis-admin')
-        cfg.write(cfg_file)
+        config.write(cfg_file)
         initial_commit(
             git_dir=git_dir,
             cfg=cfg_file.getvalue(),
@@ -146,6 +150,7 @@ class Main(app.App):
             git_dir=admin_repository,
             pubkey=pubkey,
             user=user,
+            config=cfg,
             )
         log.info('Running post-update hook...')
         util.mkdir(os.path.expanduser('~/.ssh'), 0700)
