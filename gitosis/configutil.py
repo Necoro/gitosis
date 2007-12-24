@@ -14,6 +14,16 @@ def getboolean_default(config, section, option, default_value):
     except (NoSectionError, NoOptionError):
         value = default_value
     return value
+def get_default(config, section, option, default_value):
+    """
+    Return the given section.variable, or return the default if no specific
+    value is set.
+    """
+    try:
+        value = config.get(section, option)
+    except (NoSectionError, NoOptionError):
+        value = default_value
+    return value
 
 class GitosisConfigDict(IterableUserDict):
     def keys(self):
