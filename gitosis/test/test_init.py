@@ -19,10 +19,12 @@ def test_init_admin_repository():
         +'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA'
         +'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA= fakeuser@fakehost')
     user = 'jdoe'
+    cfg = RawConfigParser()
     init.init_admin_repository(
         git_dir=admin_repository,
         pubkey=pubkey,
         user=user,
+        config=cfg,
         )
     eq(os.listdir(tmp), ['admin.git'])
     hook = os.path.join(
@@ -47,9 +49,9 @@ def test_init_admin_repository():
     # the only thing guaranteed of initial config file ordering is
     # that [gitosis] is first
     got = util.readFile(os.path.join(export_dir, 'gitosis.conf'))
-    got = got.splitlines()[0]
-    eq(got, '[gitosis]')
-    cfg = RawConfigParser()
+	# We can't gaurentee this anymore
+    #got = got.splitlines()[0]
+    #eq(got, '[gitosis]')
     cfg.read(os.path.join(export_dir, 'gitosis.conf'))
     eq(sorted(cfg.sections()),
        sorted([
