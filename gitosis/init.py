@@ -21,7 +21,7 @@ from gitosis import app
 log = logging.getLogger('gitosis.init')
 
 def read_ssh_pubkey(fp=None): #pragma: no cover
-    """Read an SSH public key from stdin."""
+    """Read an SSH public key from stdin or file."""
     if fp is None:
         fp = sys.stdin
     line = fp.readline()
@@ -92,7 +92,20 @@ class Main(app.App):
         parser = super(Main, self).create_parser()
         parser.set_usage('%prog [OPTS]')
         parser.set_description(
-            'Initialize a user account for use with gitosis')
+            'Initialize a user account for use with gitosis'
+            )
+        parser.set_defaults(
+            adminkey=None,
+            adminname=None,
+            )
+        parser.add_option('--adminkey',
+                          metavar='FILE',
+                          help='Admin SSH public key FILE location',
+                          )
+        parser.add_option('--adminname',
+                          metavar='STRING',
+                          help='Name for administrator public key file',
+                          )
         return parser
 
     def read_config(self, options, cfg):
@@ -111,8 +124,11 @@ class Main(app.App):
         os.umask(0022)
 
         log.info('Reading SSH public key...')
-        pubkey = read_ssh_pubkey()
-        user = sshkey.extract_user(pubkey)
+        pubkey = read_ssh_pubkey(options.adminkey)
+        if options.adminname is None:
+            user = sshkey.extract_user(pubkey)
+        else:
+            user = options.adminname
         if user is None:
             log.error('Cannot parse user from SSH public key.')
             sys.exit(1)
