@@ -49,9 +49,9 @@ def test_init_admin_repository():
     # the only thing guaranteed of initial config file ordering is
     # that [gitosis] is first
     got = util.readFile(os.path.join(export_dir, 'gitosis.conf'))
-	# We can't gaurentee this anymore
-    #got = got.splitlines()[0]
-    #eq(got, '[gitosis]')
+    # We can't gaurentee this anymore
+    got = got.splitlines()[0]
+    eq(got, '[gitosis]')
     cfg.read(os.path.join(export_dir, 'gitosis.conf'))
     eq(sorted(cfg.sections()),
        sorted([
