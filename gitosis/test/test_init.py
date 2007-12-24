@@ -2,10 +2,10 @@ from nose.tools import eq_ as eq
 from gitosis.test.util import assert_raises, maketemp
 
 import os
-from ConfigParser import RawConfigParser
 
 from gitosis import init
 from gitosis import repository
+from gitosis.configutil import GitosisRawConfigParser
 
 from gitosis.test import util
 
@@ -19,7 +19,7 @@ def test_init_admin_repository():
         +'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA'
         +'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA= fakeuser@fakehost')
     user = 'jdoe'
-    cfg = RawConfigParser()
+    cfg = GitosisRawConfigParser()
     init.init_admin_repository(
         git_dir=admin_repository,
         pubkey=pubkey,
