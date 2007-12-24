@@ -8,8 +8,8 @@ import sys
 
 from pkg_resources import resource_filename
 from cStringIO import StringIO
-from ConfigParser import RawConfigParser
 
+from gitosis import configutil
 from gitosis import repository
 from gitosis import run_hook
 from gitosis import sshkey
@@ -69,7 +69,7 @@ def init_admin_repository(git_dir, pubkey, user, config):
        config.has_option('group gitosis-admin', 'writable'):
        pass
     else:
-        config = RawConfigParser()
+        config = configutil.GitosisRawConfigParser()
         config.add_section('gitosis')
         config.add_section('group gitosis-admin')
         config.set('group gitosis-admin', 'members', user)

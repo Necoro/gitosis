@@ -5,6 +5,7 @@ import logging
 import optparse
 import errno
 import ConfigParser
+from gitosis import configutil
 
 # C0103 - 'log' is a special name
 # pylint: disable-msg=C0103
@@ -68,7 +69,7 @@ class App(object):
 
     def create_config(self, options):
         """Handle config file parsing."""
-        cfg = ConfigParser.RawConfigParser()
+        cfg = configutil.GitosisRawConfigParser()
         return cfg
 
     def read_config(self, options, cfg):
