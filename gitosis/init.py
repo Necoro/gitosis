@@ -20,10 +20,12 @@ from gitosis import app
 # pylint: disable-msg=C0103
 log = logging.getLogger('gitosis.init')
 
-def read_ssh_pubkey(fp=None): #pragma: no cover
+def read_ssh_pubkey(filename=None): #pragma: no cover
     """Read an SSH public key from stdin or file."""
-    if fp is None:
+    if filename is None:
         fp = sys.stdin
+    else:
+        fp = file(filename)
     line = fp.readline()
     return line
 
