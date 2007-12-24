@@ -9,6 +9,7 @@ import re
 # The 'ecc' and 'ecdh' types are speculative, based on the Internet Draft
 # http://www.ietf.org/internet-drafts/draft-green-secsh-ecc-02.txt
 SSH_KEY_PROTO2_TYPES = ['ssh-dsa', 
+                        'ssh-dss',
                         'ssh-ecc', 
                         'ssh-ecdh',
                         'ssh-rsa']
