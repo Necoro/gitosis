@@ -29,6 +29,8 @@ def _sysfunc(func, ignore, *args, **kwds):
     Run the specified function, ignoring the specified errno if raised, and
     raising other errors.
     """
+    # We use * and ** correctly here
+    # pylint: disable-msg=W0142
     if not ignore: # pragma: no cover
         ignore = []
     try:
