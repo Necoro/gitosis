@@ -4,6 +4,7 @@ import os
 from cStringIO import StringIO
 
 from gitosis import ssh
+from gitosis import sshkey
 from gitosis.test.util import mkdir, maketemp, writeFile, readFile
 
 def _key(s):
@@ -52,7 +53,9 @@ class ReadKeys_Test(object):
         writeFile(os.path.join(keydir, 'jdoe.pub'), KEY_1+'\n')
 
         gen = ssh.readKeys(keydir=keydir)
-        eq(gen.next(), ('jdoe', KEY_1))
+        (who, key) = gen.next()
+        eq(who, 'jdoe')
+        eq(key.full_key, KEY_1)
         assert_raises(StopIteration, gen.next)
 
     def test_two(self):
@@ -63,7 +66,7 @@ class ReadKeys_Test(object):
         writeFile(os.path.join(keydir, 'wsmith.pub'), KEY_2+'\n')
 
         gen = ssh.readKeys(keydir=keydir)
-        got = frozenset(gen)
+        got = frozenset( (i, j.full_key) for (i, j) in gen)
 
         eq(got,
            frozenset([
@@ -88,7 +91,7 @@ class ReadKeys_Test(object):
         writeFile(os.path.join(keydir, 'jdoe.pub'), KEY_1+'\n'+KEY_2+'\n')
 
         gen = ssh.readKeys(keydir=keydir)
-        got = frozenset(gen)
+        got = frozenset( (i, j.full_key) for (i, j) in gen)
 
         eq(got,
            frozenset([
@@ -99,8 +102,8 @@ class ReadKeys_Test(object):
 class GenerateAuthorizedKeys_Test(object):
     def test_simple(self):
         def k():
-            yield ('jdoe', KEY_1)
-            yield ('wsmith', KEY_2)
+            yield ('jdoe', sshkey.get_ssh_pubkey(KEY_1))
+            yield ('wsmith', sshkey.get_ssh_pubkey(KEY_2))
         gen = ssh.generateAuthorizedKeys(k())
         eq(gen.next(), ssh.COMMENT)
         eq(gen.next(), (
