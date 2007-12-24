@@ -44,7 +44,7 @@ def generateAuthorizedKeys(keys):
     for (user, key) in keys:
         yield TEMPLATE % dict(user=user, key=key.key, comment=key.comment)
 
-_GITOSIS_CMD_RE = '(/[^ "]+/)?gitosis-serve [^"]+'
+_GITOSIS_CMD_RE = '(/[^ "]+/)?gitosis-serve [^ "]+$'
 _COMMAND_RE = re.compile(_GITOSIS_CMD_RE)
 
 def filterAuthorizedKeys(fp):
