@@ -64,16 +64,20 @@ def init_admin_repository(git_dir, pubkey, user, config):
     repository.init(
         path=git_dir,
         )
-    if config.has_section('gitosis') and \
-       config.has_section('group gitosis-admin') and \
-       config.has_option('group gitosis-admin', 'writable'):
-       pass
-    else:
-        config = configutil.GitosisRawConfigParser()
+    # Check that the config meets the min requirements
+    if not config.has_section('gitosis'):
         config.add_section('gitosis')
+    if not config.has_section('group gitosis-admin'):
         config.add_section('group gitosis-admin')
-        config.set('group gitosis-admin', 'members', user)
+    if not config.has_option('group gitosis-admin', 'writable'):
         config.set('group gitosis-admin', 'writable', 'gitosis-admin')
+
+    # Make sure the admin user is in the admin list, else they will lock themselves out!
+    adminlist = configutil.get_default(config, 'group gitosis-admin', 'members',' ').split()
+    if user not in adminlist:
+        adminlist.append(user)
+        config.set('group gitosis-admin', 'members', ' '.join(adminlist))
+
     if not repository.has_initial_commit(git_dir):
         log.info('Making initial commit...')
         # ConfigParser does not guarantee order, so jump through hoops
