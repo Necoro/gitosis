@@ -1,35 +1,13 @@
 """
-Gitosis code to handle SSH public keys.
+Gitosis code to handle SSH authorized_keys files
 """
 import os, errno, re
 import logging
+from gitosis import sshkey
 
 # C0103 - 'log' is a special name
 # pylint: disable-msg=C0103
 log = logging.getLogger('gitosis.ssh')
-
-_ACCEPTABLE_USER_RE = re.compile(r'^[a-zA-Z][a-zA-Z0-9_.-]*(@[a-zA-Z][a-zA-Z0-9.-]*)?$')
-
-def isSafeUsername(user):
-    """
-    Is the username safe to use a a filename?
-    """
-    match = _ACCEPTABLE_USER_RE.match(user)
-    return (match is not None)
-
-class InsecureSSHKeyUsername(Exception):
-    """Username contains not allowed characters"""
-
-    def __str__(self):
-        return '%s: %s' % (self.__doc__, ': '.join(self.args))
-
-def extract_user(pubkey):
-    """Find the username for a given SSH public key line."""
-    _, user = pubkey.rsplit(None, 1)
-    if isSafeUsername(user):
-        return user
-    else:
-        raise InsecureSSHKeyUsername(repr(user))
 
 def readKeys(keydir):
     """
@@ -42,7 +20,7 @@ def readKeys(keydir):
         if ext != '.pub':
             continue
 
-        if not isSafeUsername(basename):
+        if not sshkey.isSafeUsername(basename):
             log.warn('Unsafe SSH username in keyfile: %r', filename)
             continue
 
@@ -66,8 +44,6 @@ def generateAuthorizedKeys(keys):
     for (user, key) in keys:
         yield TEMPLATE % dict(user=user, key=key)
 
-#Protocol 1 public keys consist of the following space-separated fields: options, bits, exponent, modulus, comment. 
-#Protocol 2 public key consist of: options, keytype, base64-encoded key, comment.
 _COMMAND_OPTS_SAFE_CMD = \
   'command="(/[^ "]+/)?gitosis-serve [^"]+"'
 _COMMAND_OPTS_SAFE = \
@@ -83,9 +59,9 @@ _COMMAND_OPTS_UNSAFE = \
 +'|tunnel="[^"]+"'
 
 _COMMAND_RE = re.compile(
-	'^'+_COMMAND_OPTS_SAFE_CMD \
-	+'(,('+_COMMAND_OPTS_SAFE+'))+' \
-	+' .*')
+'^'+_COMMAND_OPTS_SAFE_CMD \
++'(,('+_COMMAND_OPTS_SAFE+'))+' \
++' .*')
 
 def filterAuthorizedKeys(fp):
     """

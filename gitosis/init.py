@@ -12,7 +12,7 @@ from ConfigParser import RawConfigParser
 
 from gitosis import repository
 from gitosis import run_hook
-from gitosis import ssh
+from gitosis import sshkey
 from gitosis import util
 from gitosis import app
 
@@ -112,7 +112,7 @@ class Main(app.App):
 
         log.info('Reading SSH public key...')
         pubkey = read_ssh_pubkey()
-        user = ssh.extract_user(pubkey)
+        user = sshkey.extract_user(pubkey)
         if user is None:
             log.error('Cannot parse user from SSH public key.')
             sys.exit(1)
