@@ -136,7 +136,8 @@ class Main(app.App):
         log.info('Reading SSH public key...')
         pubkey = read_ssh_pubkey(options.adminkey)
         if options.adminname is None:
-            user = sshkey.extract_user(pubkey)
+            _ = sshkey.get_ssh_pubkey(pubkey)
+            user = _.username
         else:
             user = options.adminname
         if user is None:

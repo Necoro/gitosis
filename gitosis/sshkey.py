@@ -61,7 +61,10 @@ class SSHPublicKey:
         """
         Returns the username from the comment, the first word of the comment.
         """
-        return self._username
+        if isSafeUsername(self._username):
+            return self._username
+        else:
+            raise InsecureSSHKeyUsername(repr(self._username))
     
     def options_string(self):
         """Return the options array as a suitable string."""
@@ -198,14 +201,6 @@ def isSafeUsername(user):
     """Is the username safe to use a a filename? """
     match = _ACCEPTABLE_USER_RE.match(user)
     return (match is not None)
-
-def extract_user(pubkey):
-    """Find the username for a given SSH public key line."""
-    _, user = pubkey.rsplit(None, 1)
-    if isSafeUsername(user):
-        return user
-    else:
-        raise InsecureSSHKeyUsername(repr(user))
 
 #X#key1 = 'no-X11-forwarding,command="x b c , d=e f \\"wham\\" \' 
 #before you go-go" 
