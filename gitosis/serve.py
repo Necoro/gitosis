@@ -53,6 +53,9 @@ class ReadAccessDenied(AccessDenied):
 
 def serve(cfg, user, command):
     """Check the git command for sanity, and then run the git command."""
+        
+    log = logging.getLogger('gitosis.serve.serve')
+
     if '\n' in command:
         raise CommandMayNotContainNewlineError()
 
@@ -65,6 +68,11 @@ def serve(cfg, user, command):
     if (verb not in COMMANDS_WRITE
         and verb not in COMMANDS_READONLY):
         raise UnknownCommandError()
+        
+    log.debug('Got command %(cmd)r and args %(args)r' % dict(
+                cmd=verb,
+				args=args,
+                ))
 
     if args.startswith("'/") and args.endswith("'"):
         args = args[1:-1]
