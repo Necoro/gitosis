@@ -66,6 +66,18 @@ def serve(cfg, user, command):
         and verb not in COMMANDS_READONLY):
         raise UnknownCommandError()
 
+    if args.startswith("'/") and args.endswith("'"):
+        args = args[1:-1]
+        repos = util.getRepositoryDir(cfg)
+        reposreal = os.path.realpath(repos)
+        if args.startswith(repos):
+            args = os.path.realpath(args)[len(repos)+1:]
+        elif args.startswith(reposreal):
+            args = os.path.realpath(args)[len(reposreal)+1:]
+        else:
+            args = args[1:]
+        args = "'%s'" % (args, )
+
     match = ALLOW_RE.match(args)
     if match is None:
         raise UnsafeArgumentsError()
