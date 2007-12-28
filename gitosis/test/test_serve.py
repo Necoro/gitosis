@@ -203,6 +203,31 @@ def test_push_inits_subdir_parent_missing():
     eq(os.listdir(foo), ['bar.git'])
     assert os.path.isfile(os.path.join(repositories, 'foo', 'bar.git', 'HEAD'))
 
+def test_push_inits_subdir_parent_missing_custom_perms():
+    tmp = util.maketemp()
+    cfg = RawConfigParser()
+    cfg.add_section('gitosis')
+    repositories = os.path.join(tmp, 'repositories')
+    os.mkdir(repositories)
+    cfg.set('gitosis', 'repositories', repositories)
+    cfg.set('gitosis', 'dirmode', 0711)
+    generated = os.path.join(tmp, 'generated')
+    os.mkdir(generated)
+    cfg.set('gitosis', 'generate-files-in', generated)
+    cfg.add_section('group foo')
+    cfg.set('group foo', 'members', 'jdoe')
+    cfg.set('group foo', 'writable', 'foo/bar')
+    serve.serve(
+        cfg=cfg,
+        user='jdoe',
+        command="git-receive-pack 'foo/bar.git'",
+        )
+    eq(os.listdir(repositories), ['foo'])
+    foo = os.path.join(repositories, 'foo')
+    util.check_mode(foo, 0711, is_dir=True)
+    eq(os.listdir(foo), ['bar.git'])
+    assert os.path.isfile(os.path.join(repositories, 'foo', 'bar.git', 'HEAD'))
+
 def test_push_inits_subdir_parent_exists():
     tmp = util.maketemp()
     cfg = RawConfigParser()
