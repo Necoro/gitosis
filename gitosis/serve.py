@@ -9,6 +9,7 @@ import logging
 import sys, os, re
 
 from gitosis import access
+from gitosis import configutil
 from gitosis import repository
 from gitosis import app
 from gitosis import util
@@ -107,11 +108,14 @@ def serve(cfg, user, command):
 
         # create leading directories
         path = topdir
+        newdirmode = configutil.get_default(cfg, 'repo %s' % (relpath, ), 'dirmode', None)
+        if newdirmode is None:
+                newdirmode = configutil.get_default(cfg, 'gitosis', 'dirmode', 0750)
         for segment in repopath.split(os.sep)[:-1]:
             path = os.path.join(path, segment)
-            util.mkdir(path, 0750)
+            util.mkdir(path, newdirmode)
 
-        repository.init(path=fullpath)
+        repository.init(path=fullpath, mode=newdirmode)
         run_hook.build_reposistory_data(cfg)
 
     # put the verb back together with the new path
