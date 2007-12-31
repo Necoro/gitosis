@@ -51,9 +51,12 @@ def post_update(cfg, git_dir): #pragma: no cover
         os.path.join(export, 'gitosis.conf'),
         os.path.join(export, '..', 'gitosis.conf'),
         )
+    # re-read config to get up-to-date settings
+    cfg.read(os.path.join(export, '..', 'gitosis.conf'))
     build_reposistory_data(cfg)
+    authorized_keys = util.getSSHAuthorizedKeysPath(config=cfg)
     ssh.writeAuthorizedKeys(
-        path=os.path.expanduser('~/.ssh/authorized_keys'),
+        path=authorized_keys,
         keydir=os.path.join(export, 'keydir'),
         )
 
