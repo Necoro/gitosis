@@ -71,7 +71,7 @@ def serve(cfg, user, command):
         
     log.debug('Got command %(cmd)r and args %(args)r' % dict(
                 cmd=verb,
-				args=args,
+                args=args,
                 ))
 
     if args.startswith("'/") and args.endswith("'"):
@@ -130,7 +130,11 @@ def serve(cfg, user, command):
         path = topdir
         newdirmode = configutil.get_default(cfg, 'repo %s' % (relpath, ), 'dirmode', None)
         if newdirmode is None:
-                newdirmode = configutil.get_default(cfg, 'gitosis', 'dirmode', 0750)
+                newdirmode = configutil.get_default(cfg, 'gitosis', 'dirmode', '0750')
+
+        # Convert string as octal to a number
+        newdirmode = int(newdirmode, 8)
+
         for segment in repopath.split(os.sep)[:-1]:
             path = os.path.join(path, segment)
             util.mkdir(path, newdirmode)
