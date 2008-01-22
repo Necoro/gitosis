@@ -201,17 +201,3 @@ def isSafeUsername(user):
     """Is the username safe to use a a filename? """
     match = _ACCEPTABLE_USER_RE.match(user)
     return (match is not None)
-
-#X#key1 = 'no-X11-forwarding,command="x b c , d=e f \\"wham\\" \' 
-#before you go-go" 
-#ssh-rsa abc robbat2@foo foo\tbar#ignore'
-#X#key2 = 'from=172.16.9.1 768 3 5 sam comment\tfoo'
-#X#key3 = '768 3 5 commentfoo'
-#X## 123456789 123456789 123456789 123456789 123456789
-#X#k = get_ssh_pubkey(key1)
-#X#print 'opts=%r' % (k.options, )
-#X#print 'k=%r' % (k.key, )
-#X#print 'c=%r' % (k.comment, )
-#X#print 'u=%r' % (k.username, )
-#X#print k.full_key
-#X#
