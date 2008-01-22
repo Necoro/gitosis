@@ -19,10 +19,25 @@ def test_post_update_simple():
         +'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA'
         +'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA= fakeuser@fakehost')
     user = 'theadmin'
+    cfg = RawConfigParser()
+    cfg.add_section('gitosis')
+    cfg.set('gitosis', 'repositories', repos)
+    generated = os.path.join(tmp, 'generated')
+    os.mkdir(generated)
+    cfg.set('gitosis', 'generate-files-in', generated)
+    ssh = os.path.join(tmp, 'ssh')
+    os.mkdir(ssh)
+    cfg.set(
+        'gitosis',
+        'ssh-authorized-keys-path',
+        os.path.join(ssh, 'authorized_keys'),
+        )
+
     init.init_admin_repository(
         git_dir=admin_repository,
         pubkey=pubkey,
         user=user,
+        config=cfg,
         )
     repository.init(path=os.path.join(repos, 'forweb.git'))
     repository.init(path=os.path.join(repos, 'fordaemon.git'))
@@ -56,19 +71,6 @@ description = blah blah
              +'BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB'
              +'BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB= jdoe@host.example.com'),
             ],
-        )
-    cfg = RawConfigParser()
-    cfg.add_section('gitosis')
-    cfg.set('gitosis', 'repositories', repos)
-    generated = os.path.join(tmp, 'generated')
-    os.mkdir(generated)
-    cfg.set('gitosis', 'generate-files-in', generated)
-    ssh = os.path.join(tmp, 'ssh')
-    os.mkdir(ssh)
-    cfg.set(
-        'gitosis',
-        'ssh-authorized-keys-path',
-        os.path.join(ssh, 'authorized_keys'),
         )
     run_hook.post_update(
         cfg=cfg,
