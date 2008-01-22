@@ -243,7 +243,7 @@ def test_push_inits_subdir_parent_missing_custom_perms():
     repositories = os.path.join(tmp, 'repositories')
     os.mkdir(repositories)
     cfg.set('gitosis', 'repositories', repositories)
-    cfg.set('gitosis', 'dirmode', 0711)
+    cfg.set('gitosis', 'dirmode', '0711')
     generated = os.path.join(tmp, 'generated')
     os.mkdir(generated)
     cfg.set('gitosis', 'generate-files-in', generated)
