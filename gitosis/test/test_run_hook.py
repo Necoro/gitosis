@@ -13,7 +13,7 @@ def test_post_update_simple():
     os.mkdir(repos)
     admin_repository = os.path.join(repos, 'gitosis-admin.git')
     pubkey = (
-        'ssh-somealgo '
+        'ssh-rsa '
         +'0123456789ABCDEFAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA'
         +'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA'
         +'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA'
@@ -65,7 +65,7 @@ owner = John Doe
 description = blah blah
 """),
             ('keydir/jdoe.pub',
-             'ssh-somealgo '
+             'ssh-rsa '
              +'0123456789ABCDEFBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB'
              +'BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB'
              +'BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB'
@@ -93,5 +93,5 @@ forweb.git John+Doe
     got = os.listdir(ssh)
     eq(got, ['authorized_keys'])
     got = readFile(os.path.join(ssh, 'authorized_keys')).splitlines(True)
-    assert 'command="gitosis-serve jdoe",no-port-forwarding,no-X11-forwarding,no-agent-forwarding,no-pty ssh-somealgo 0123456789ABCDEFBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB= jdoe@host.example.com\n' in got, \
+    assert 'command="gitosis-serve jdoe",no-port-forwarding,no-X11-forwarding,no-agent-forwarding,no-pty ssh-rsa 0123456789ABCDEFBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB= jdoe@host.example.com\n' in got, \
         "SSH authorized_keys line for jdoe not found: %r" % got
