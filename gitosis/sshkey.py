@@ -141,7 +141,7 @@ def _explode_ssh_key(line):
     Seperately return the options, key data and comment.
     """
     opts = {}
-    shl = shlex(StringIO(line), None, True)
+    shl = shlex(StringIO(line.strip()), None, True)
     shl.wordchars += '-'
     # Treat ',' as whitespace seperation the options
     shl.whitespace += ','

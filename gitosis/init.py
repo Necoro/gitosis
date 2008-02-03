@@ -140,6 +140,7 @@ class Main(app.App):
             user = _.username
         else:
             user = options.adminname
+        user = user.strip()
         if user is None:
             log.error('Cannot parse user from SSH public key.')
             sys.exit(1)
