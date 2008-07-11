@@ -30,6 +30,7 @@ def readKeys(keydir):
             line = line.rstrip('\n')
             if line.startswith('#'):
                 continue
+            line = line.strip()
             if len(line) > 0:
                 yield (basename, sshkey.get_ssh_pubkey(line))
         fp.close()
