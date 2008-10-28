@@ -1,7 +1,9 @@
 from nose.tools import eq_ as eq
 from gitosis.test.util import assert_raises
 
+import logging
 import os
+from cStringIO import StringIO
 from ConfigParser import RawConfigParser
 
 from gitosis import serve
@@ -21,7 +23,7 @@ def test_bad_newLine():
     eq(str(e), 'Command may not contain newline')
     assert isinstance(e, serve.ServingError)
 
-def test_bad_nospace():
+def test_bad_dash_noargs():
     cfg = RawConfigParser()
     e = assert_raises(
         serve.UnknownCommandError,
@@ -29,6 +31,18 @@ def test_bad_nospace():
         cfg=cfg,
         user='jdoe',
         command='git-upload-pack',
+        )
+    eq(str(e), 'Unknown command denied')
+    assert isinstance(e, serve.ServingError)
+
+def test_bad_space_noargs():
+    cfg = RawConfigParser()
+    e = assert_raises(
+        serve.UnknownCommandError,
+        serve.serve,
+        cfg=cfg,
+        user='jdoe',
+        command='git upload-pack',
         )
     eq(str(e), 'Unknown command denied')
     assert isinstance(e, serve.ServingError)
@@ -45,19 +59,43 @@ def test_bad_command():
     eq(str(e), 'Unknown command denied')
     assert isinstance(e, serve.ServingError)
 
-def test_bad_unsafeArguments():
+def test_bad_unsafeArguments_notQuoted():
     cfg = RawConfigParser()
     e = assert_raises(
         serve.UnsafeArgumentsError,
         serve.serve,
         cfg=cfg,
         user='jdoe',
-        command='git-upload-pack /evil/attack',
+        command="git-upload-pack foo",
         )
     eq(str(e), 'Arguments to command look dangerous')
     assert isinstance(e, serve.ServingError)
 
-def test_bad_forbiddenCommand_read():
+def test_bad_unsafeArguments_badCharacters():
+    cfg = RawConfigParser()
+    e = assert_raises(
+        serve.UnsafeArgumentsError,
+        serve.serve,
+        cfg=cfg,
+        user='jdoe',
+        command="git-upload-pack 'ev!l'",
+        )
+    eq(str(e), 'Arguments to command look dangerous')
+    assert isinstance(e, serve.ServingError)
+
+def test_bad_unsafeArguments_dotdot():
+    cfg = RawConfigParser()
+    e = assert_raises(
+        serve.UnsafeArgumentsError,
+        serve.serve,
+        cfg=cfg,
+        user='jdoe',
+        command="git-upload-pack 'something/../evil'",
+        )
+    eq(str(e), 'Arguments to command look dangerous')
+    assert isinstance(e, serve.ServingError)
+
+def test_bad_forbiddenCommand_read_dash():
     cfg = RawConfigParser()
     e = assert_raises(
         serve.ReadAccessDenied,
@@ -70,7 +108,20 @@ def test_bad_forbiddenCommand_read():
     assert isinstance(e, serve.AccessDenied)
     assert isinstance(e, serve.ServingError)
 
-def test_bad_forbiddenCommand_write_noAccess():
+def test_bad_forbiddenCommand_read_space():
+    cfg = RawConfigParser()
+    e = assert_raises(
+        serve.ReadAccessDenied,
+        serve.serve,
+        cfg=cfg,
+        user='jdoe',
+        command="git upload-pack 'foo'",
+        )
+    eq(str(e), 'Repository read access denied')
+    assert isinstance(e, serve.AccessDenied)
+    assert isinstance(e, serve.ServingError)
+
+def test_bad_forbiddenCommand_write_noAccess_dash():
     cfg = RawConfigParser()
     e = assert_raises(
         serve.ReadAccessDenied,
@@ -85,7 +136,22 @@ def test_bad_forbiddenCommand_write_noAccess():
     assert isinstance(e, serve.AccessDenied)
     assert isinstance(e, serve.ServingError)
 
-def test_bad_forbiddenCommand_write_readAccess():
+def test_bad_forbiddenCommand_write_noAccess_space():
+    cfg = RawConfigParser()
+    e = assert_raises(
+        serve.ReadAccessDenied,
+        serve.serve,
+        cfg=cfg,
+        user='jdoe',
+        command="git receive-pack 'foo'",
+        )
+    # error message talks about read in an effort to make it more
+    # obvious that jdoe doesn't have *even* read access
+    eq(str(e), 'Repository read access denied')
+    assert isinstance(e, serve.AccessDenied)
+    assert isinstance(e, serve.ServingError)
+
+def test_bad_forbiddenCommand_write_readAccess_dash():
     cfg = RawConfigParser()
     cfg.add_section('group foo')
     cfg.set('group foo', 'members', 'jdoe')
@@ -101,7 +167,23 @@ def test_bad_forbiddenCommand_write_readAccess():
     assert isinstance(e, serve.AccessDenied)
     assert isinstance(e, serve.ServingError)
 
-def test_simple_read():
+def test_bad_forbiddenCommand_write_readAccess_space():
+    cfg = RawConfigParser()
+    cfg.add_section('group foo')
+    cfg.set('group foo', 'members', 'jdoe')
+    cfg.set('group foo', 'readonly', 'foo')
+    e = assert_raises(
+        serve.WriteAccessDenied,
+        serve.serve,
+        cfg=cfg,
+        user='jdoe',
+        command="git receive-pack 'foo'",
+        )
+    eq(str(e), 'Repository write access denied')
+    assert isinstance(e, serve.AccessDenied)
+    assert isinstance(e, serve.ServingError)
+
+def test_simple_read_dash():
     tmp = util.maketemp()
     repository.init(os.path.join(tmp, 'foo.git'))
     cfg = RawConfigParser()
@@ -165,6 +247,22 @@ def test_simple_write():
         command="git-receive-pack 'foo'",
         )
     eq(got, "git-receive-pack '%s/foo.git'" % tmp)
+
+def test_simple_write_space():
+    tmp = util.maketemp()
+    repository.init(os.path.join(tmp, 'foo.git'))
+    cfg = RawConfigParser()
+    cfg.add_section('gitosis')
+    cfg.set('gitosis', 'repositories', tmp)
+    cfg.add_section('group foo')
+    cfg.set('group foo', 'members', 'jdoe')
+    cfg.set('group foo', 'writable', 'foo')
+    got = serve.serve(
+        cfg=cfg,
+        user='jdoe',
+        command="git receive-pack 'foo'",
+        )
+    eq(got, "git receive-pack '%s/foo.git'" % tmp)
 
 def test_push_inits_if_needed():
     # a push to a non-existent repository (but where config authorizes
@@ -424,3 +522,52 @@ def test_push_inits_sets_export_ok():
     path = os.path.join(repositories, 'foo.git', 'git-daemon-export-ok')
     assert os.path.exists(path)
 
+def test_absolute():
+    # as the only convenient way to use non-standard SSH ports with
+    # git is via the ssh://user@host:port/path syntax, and that syntax
+    # forces absolute urls, just force convert absolute paths to
+    # relative paths; you'll never really want absolute paths via
+    # gitosis, anyway.
+    tmp = util.maketemp()
+    repository.init(os.path.join(tmp, 'foo.git'))
+    cfg = RawConfigParser()
+    cfg.add_section('gitosis')
+    cfg.set('gitosis', 'repositories', tmp)
+    cfg.add_section('group foo')
+    cfg.set('group foo', 'members', 'jdoe')
+    cfg.set('group foo', 'readonly', 'foo')
+    got = serve.serve(
+        cfg=cfg,
+        user='jdoe',
+        command="git-upload-pack '/foo'",
+        )
+    eq(got, "git-upload-pack '%s/foo.git'" % tmp)
+
+def test_typo_writeable():
+    tmp = util.maketemp()
+    repository.init(os.path.join(tmp, 'foo.git'))
+    cfg = RawConfigParser()
+    cfg.add_section('gitosis')
+    cfg.set('gitosis', 'repositories', tmp)
+    cfg.add_section('group foo')
+    cfg.set('group foo', 'members', 'jdoe')
+    cfg.set('group foo', 'writeable', 'foo')
+    log = logging.getLogger('gitosis.serve')
+    buf = StringIO()
+    handler = logging.StreamHandler(buf)
+    log.addHandler(handler)
+    try:
+        got = serve.serve(
+            cfg=cfg,
+            user='jdoe',
+            command="git-receive-pack 'foo'",
+            )
+    finally:
+        log.removeHandler(handler)
+    eq(got, "git-receive-pack '%s/foo.git'" % tmp)
+    handler.flush()
+    eq(
+        buf.getvalue(),
+        "Repository 'foo' config has typo \"writeable\", shou"
+        +"ld be \"writable\"\n",
+        )

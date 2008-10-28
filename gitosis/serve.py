@@ -15,16 +15,18 @@ from gitosis import app
 from gitosis import util
 from gitosis import run_hook
 
-ALLOW_RE = re.compile(
-    "^'(?P<path>[a-zA-Z0-9][a-zA-Z0-9@._-]*(/[a-zA-Z0-9][a-zA-Z0-9@._-]*)*)'$"
-    )
+log = logging.getLogger('gitosis.serve')
+
+ALLOW_RE = re.compile("^'/*(?P<path>[a-zA-Z0-9][a-zA-Z0-9@._-]*(/[a-zA-Z0-9][a-zA-Z0-9@._-]*)*)'$")
 
 COMMANDS_READONLY = [
     'git-upload-pack',
+    'git upload-pack',
     ]
 
 COMMANDS_WRITE = [
     'git-receive-pack',
+    'git receive-pack',
     ]
 
 class ServingError(Exception):
@@ -62,8 +64,18 @@ def serve(cfg, user, command):
     try:
         verb, args = command.split(None, 1)
     except ValueError:
-        # all known commands take one argument; improve if/when needed
+        # all known "git-foo" commands take one argument; improve
+        # if/when needed
         raise UnknownCommandError()
+
+    if verb == 'git':
+        try:
+            subverb, args = args.split(None, 1)
+        except ValueError:
+            # all known "git foo" commands take one argument; improve
+            # if/when needed
+            raise UnknownCommandError()
+        verb = '%s %s' % (verb, subverb)
 
     if (verb not in COMMANDS_WRITE
         and verb not in COMMANDS_READONLY):
@@ -98,6 +110,21 @@ def serve(cfg, user, command):
         user=user,
         mode='writable',
         path=path)
+
+    if newpath is None:
+        # didn't have write access; try once more with the popular
+        # misspelling
+        newpath = access.haveAccess(
+            config=cfg,
+            user=user,
+            mode='writeable',
+            path=path)
+        if newpath is not None:
+            log.warning(
+                'Repository %r config has typo "writeable", '
+                +'should be "writable"',
+                path,
+                )
 
     if newpath is None:
         # didn't have write access
@@ -170,15 +197,15 @@ class Main(app.App):
         except ValueError:
             parser.error('Missing argument USER.')
 
-        log = logging.getLogger('gitosis.serve.main')
+        main_log = logging.getLogger('gitosis.serve.main')
         os.umask(0022)
 
         cmd = os.environ.get('SSH_ORIGINAL_COMMAND', None)
         if cmd is None:
-            log.error('Need SSH_ORIGINAL_COMMAND in environment.')
+            main_log.error('Need SSH_ORIGINAL_COMMAND in environment.')
             sys.exit(1)
 
-        log.debug('Got command %(cmd)r' % dict(
+        main_log.debug('Got command %(cmd)r' % dict(
             cmd=cmd,
             ))
 
@@ -190,11 +217,11 @@ class Main(app.App):
                 user=user,
                 command=cmd,
                 )
-        except ServingError, ex:
-            log.error('%s', ex)
+        except ServingError, e:
+            main_log.error('%s', e)
             sys.exit(1)
 
-        log.debug('Serving %s', newcmd)
-        os.execvp('git-shell', ['git-shell', '-c', newcmd])
-        log.error('Cannot execute git-shell.')
+        main_log.debug('Serving %s', newcmd)
+        os.execvp('git', ['git', 'shell', '-c', newcmd])
+        main_log.error('Cannot execute git-shell.')
         sys.exit(1)
