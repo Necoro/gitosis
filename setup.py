@@ -21,8 +21,8 @@ setup(
     version = "0.2",
     packages = find_packages(),
 
-    author = "Tommi Virtanen",
-    author_email = "tv@eagain.net",
+    author = ["Tommi Virtanen", "Robin H. Johnson"],
+    author_email = ["tv@eagain.net", "robbat2@gentoo.org"],
     description = "software for hosting git repositories",
     long_description = """
 
