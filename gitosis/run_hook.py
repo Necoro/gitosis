@@ -9,6 +9,7 @@ import sys
 from gitosis import repository
 from gitosis import ssh
 from gitosis import gitweb
+from gitosis import cgit
 from gitosis import gitdaemon
 from gitosis import app
 from gitosis import util
@@ -28,6 +29,10 @@ def build_reposistory_data(config):
     gitweb.generate_project_list(
         config=config,
         path=os.path.join(generated, 'projects.list'),
+        )
+    cgit.generate_project_list(
+        config=config,
+        path=os.path.join(generated, 'repos.list'),
         )
     gitdaemon.set_export_ok(
         config=config,
