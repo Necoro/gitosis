@@ -200,6 +200,28 @@ class Main(app.App):
         main_log = logging.getLogger('gitosis.serve.main')
         os.umask(0022)
 
+        os.environ['GITOSIS_USER'] = user
+
+        userfile=os.path.join(util.getRepositoryDir(cfg),'gitosis-admin.git','gitosis-export','keydir',user+'.pub')
+        try:
+            userdata=open(userfile, 'r').readline()
+        except:
+            # don't fail if file is not found
+            userdata=""
+
+        if len(userdata) > 0:
+            m=re.search("^# gitosis-identity: *([^\<]+)? *(?:\<([^\>, ]*)\>)?",userdata)
+            if m:
+                os.environ['GITOSIS_NAME'] = m.group(1).strip()
+                os.environ['GITOSIS_EMAIL'] = m.group(2)
+            else:
+                m.search("^# gitosis-name: *(.*)$", userdata)
+                if m:
+                    os.environ['GITOSIS_NAME'] = m.group(1).strip()
+                m.search("^# gitosis-email: *<?(.*)>?$", userdata)
+                if m:
+                    os.environ['GITOSIS_EMAIL'] = m.group(1).strip()
+
         cmd = os.environ.get('SSH_ORIGINAL_COMMAND', None)
         if cmd is None:
             main_log.error('Need SSH_ORIGINAL_COMMAND in environment.')
