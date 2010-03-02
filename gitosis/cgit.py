@@ -50,7 +50,7 @@ def generate_project_list_fp(config, fp):
 
     for groupname, group in grouped_sections.iteritems():
         if groupname:
-            print >> fp, 'repo.group=%s'%(groupname)
+            print >> fp, 'repo.section=%s'%(groupname)
 
         for section in group:
             sectiontitle = section.split(None, 1)
@@ -94,7 +94,7 @@ def _repository_path(log, repositories, name, default_value):
 
 def generate_project_list(config, path):
     """
-    Generate projects list for ``gitweb``.
+    Generate projects list for ``cgit``.
 
     :param config: configuration to read projects from
     :type config: RawConfigParser
