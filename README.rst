@@ -190,7 +190,32 @@ And a simple ``gitweb.conf`` file:
 Note that this short snippet is not a substitute for reading and
 understanding the relevant documentation.
 
+Using cgit
+==========
 
+cgit_ is an alternative implementation allowing browsing your ``git``
+repositories. To allow a repository to be available, add ``cgit = yes``
+to the corresponding ``[repo ...]`` section in your ``gitosis.conf``.
+Alternatively you could add it to the global ``[gitosis]`` section to
+allow it globally (and use ``cgit = no`` to switch it off in specific 
+repos).
+
+Additionally you can set ``description``, ``owner``, ``readme`` (being
+a path to a file, which will be included in the about section of this
+repository) and ``cgit_group`` (specifying the group/section this
+repository belongs to) for each of the repositories.
+
+Finally, you need to include the generated repository list in your cgit
+configuration, i.e. add ``include = /srv/example.com/git/gitosis/repos.list`` 
+to it, but replacing ``/srv/example.com/git`` by your actual path you 
+have chosen for ``gitosis``.
+
+.. _cgit: http://hjemli.net/git/cgit/
+
+.. note:: 
+    
+    This feature is part of the Gentoo patchset and not included in the
+    official ``gitosis`` distribution.
 
 Contact
 =======
