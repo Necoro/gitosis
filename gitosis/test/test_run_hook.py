@@ -79,7 +79,8 @@ description = blah blah
     got = readFile(os.path.join(repos, 'forweb.git', 'description'))
     eq(got, 'blah blah\n')
     got = os.listdir(generated)
-    eq(got, ['projects.list'])
+    got.sort()
+    eq(got, ['projects.list', 'repos.list'])
     got = readFile(os.path.join(generated, 'projects.list'))
     eq(
         got,
