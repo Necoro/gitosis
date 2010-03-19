@@ -215,10 +215,10 @@ class Main(app.App):
                 os.environ['GITOSIS_NAME'] = m.group(1).strip()
                 os.environ['GITOSIS_EMAIL'] = m.group(2)
             else:
-                m.search("^# gitosis-name: *(.*)$", userdata)
+                m = re.search("^# gitosis-name: *(.*)$", userdata)
                 if m:
                     os.environ['GITOSIS_NAME'] = m.group(1).strip()
-                m.search("^# gitosis-email: *<?(.*)>?$", userdata)
+                m = re.search("^# gitosis-email: *<?(.*)>?$", userdata)
                 if m:
                     os.environ['GITOSIS_EMAIL'] = m.group(1).strip()
 
