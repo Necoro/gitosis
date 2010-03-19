@@ -50,7 +50,7 @@ def generate_project_list_fp(config, fp):
 
     for groupname, group in grouped_sections.iteritems():
         if groupname:
-            print >> fp, 'repo.section=%s'%(groupname)
+            print >> fp, 'section=%s'%(groupname)
 
         for section in group:
             sectiontitle = section.split(None, 1)
