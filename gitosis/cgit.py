@@ -59,7 +59,8 @@ def generate_project_list_fp(config, fp):
 
             fullpath = _repository_path(log, repositories, name, name)
 
-            print >> fp, 'repo.url=%s'%(name)
+            print >> fp, 'repo.url=%s.git'%(name)
+            print >> fp, 'repo.name=%s' % name
 
             if fullpath is None:
                 continue
