@@ -79,18 +79,27 @@ def _repository_path(log, repositories, name, default_value):
     Check if the repository exists by the common name, or with a .git suffix,
     and return the full pathname.
     """
+    if not name.endswith(".git"):
+        name += ".git"
+
     fullpath=os.path.join(repositories, name)
     if not os.path.exists(fullpath):
-        namedotgit = '%s.git' % name
-        fullpath=os.path.join(repositories, namedotgit)
-        if os.path.exists(fullpath):
-            return fullpath
-        else:
-            log.warning(
-                    'Cannot find %(name)r in %(repositories)r'
-                    % dict(name=name, repositories=repositories))
-            return None
+        log.warning(
+                'Cannot find %(name)r in %(repositories)r'
+                % dict(name=name, repositories=repositories))
+        return None
     return fullpath
+
+#        namedotgit = '%s.git' % name
+#        fullpath=os.path.join(repositories, namedotgit)
+#        if os.path.exists(fullpath):
+#            return fullpath
+#        else:
+#            log.warning(
+#                    'Cannot find %(name)r in %(repositories)r'
+#                    % dict(name=name, repositories=repositories))
+#            return None
+#    return fullpath
 
 def generate_project_list(config, path):
     """
