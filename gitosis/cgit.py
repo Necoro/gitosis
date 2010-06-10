@@ -17,6 +17,7 @@ from gitosis.configutil import getboolean_default, get_default
 field_map={'description':'repo.desc',
            'owner':'repo.owner',
            'readme':'repo.readme',
+           'filter':'repo.source-filter'
            }
 
 def generate_project_list_fp(config, fp):
