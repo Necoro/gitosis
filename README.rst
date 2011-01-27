@@ -202,8 +202,9 @@ repos).
 
 Additionally you can set ``description``, ``owner``, ``readme`` (being
 a path to a file, which will be included in the about section of this
-repository) and ``cgit_group`` (specifying the group/section this
-repository belongs to) for each of the repositories.
+repository), ``cgit_group`` (specifying the group/section this
+repository belongs to) and ``defbranch`` (the default branch) for each 
+of the repositories.
 
 Finally, you need to include the generated repository list in your cgit
 configuration, i.e. add ``include = /srv/example.com/git/gitosis/repos.list`` 
