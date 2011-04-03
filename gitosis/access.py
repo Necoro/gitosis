@@ -55,6 +55,15 @@ def haveAccess(config, user, mode, path):
                 path=path,
                 ))
             mapping = path
+        elif os.path.join(os.path.dirname(path), "*") in repos:
+            log.debug(
+                'Wildcard access ok for %(user)r as %(mode)r on %(path)r'
+                % dict(
+                user=user,
+                mode=mode,
+                path=path,
+                ))
+            mapping = path
         else:
             try:
                 mapping = config.get('group %s' % groupname,
