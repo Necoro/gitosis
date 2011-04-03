@@ -147,8 +147,7 @@ def serve(cfg, user, command):
            'git extension should have been stripped: %r' % relpath
     repopath = '%s.git' % relpath
     fullpath = os.path.join(topdir, repopath)
-    if (not os.path.exists(fullpath)
-        and verb in COMMANDS_WRITE):
+    if not os.path.exists(fullpath):
         # it doesn't exist on the filesystem, but the configuration
         # refers to it, we're serving a write request, and the user is
         # authorized to do that: create the repository on the fly
@@ -215,10 +214,10 @@ class Main(app.App):
                 os.environ['GITOSIS_NAME'] = m.group(1).strip()
                 os.environ['GITOSIS_EMAIL'] = m.group(2)
             else:
-                m = re.search("^# gitosis-name: *(.*)$", userdata)
+                m=re.search("^# gitosis-name: *(.*)$", userdata)
                 if m:
                     os.environ['GITOSIS_NAME'] = m.group(1).strip()
-                m = re.search("^# gitosis-email: *<?(.*)>?$", userdata)
+                m=re.search("^# gitosis-email: *<?(.*)>?$", userdata)
                 if m:
                     os.environ['GITOSIS_EMAIL'] = m.group(1).strip()
 
