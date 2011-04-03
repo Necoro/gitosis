@@ -42,7 +42,7 @@ def test_bad_space_noargs():
         serve.serve,
         cfg=cfg,
         user='jdoe',
-        command='git upload-pack',
+        command='git-upload-pack',
         )
     eq(str(e), 'Unknown command denied')
     assert isinstance(e, serve.ServingError)
@@ -115,7 +115,7 @@ def test_bad_forbiddenCommand_read_space():
         serve.serve,
         cfg=cfg,
         user='jdoe',
-        command="git upload-pack 'foo'",
+        command="git-upload-pack 'foo'",
         )
     eq(str(e), 'Repository read access denied')
     assert isinstance(e, serve.AccessDenied)
@@ -232,7 +232,31 @@ def test_simple_read_leading_slash():
         )
     eq(got, "git-upload-pack '%s/foo.git'" % tmp)
 
-def test_simple_write():
+def test_read_inits_if_needed():
+    # a clone of a non-existent repository (but where config
+    # authorizes you to do that) will create the repository on the fly
+    tmp = util.maketemp()
+    cfg = RawConfigParser()
+    cfg.add_section('gitosis')
+    repositories = os.path.join(tmp, 'repositories')
+    os.mkdir(repositories)
+    cfg.set('gitosis', 'repositories', repositories)
+    generated = os.path.join(tmp, 'generated')
+    os.mkdir(generated)
+    cfg.set('gitosis', 'generate-files-in', generated)
+    cfg.add_section('group foo')
+    cfg.set('group foo', 'members', 'jdoe')
+    cfg.set('group foo', 'readonly', 'foo')
+    got = serve.serve(
+        cfg=cfg,
+        user='jdoe',
+        command="git-upload-pack 'foo'",
+        )
+    eq(got, "git-upload-pack '%s/foo.git'" % repositories)
+    eq(os.listdir(repositories), ['foo.git'])
+    assert os.path.isfile(os.path.join(repositories, 'foo.git', 'HEAD'))
+
+def test_simple_write_dash():
     tmp = util.maketemp()
     repository.init(os.path.join(tmp, 'foo.git'))
     cfg = RawConfigParser()
