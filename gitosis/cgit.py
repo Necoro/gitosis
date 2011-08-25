@@ -71,7 +71,7 @@ def find_readme(path, treeish="master"):
         if re.match("(?i)readme", fname):
             # The latest version of ``cgit`` seems to refuse readme
             # without refspec.
-            return "{0}:{1}".format(treish, fname)
+            return "{0}:{1}".format(treeish, fname)
 
 
 def generate_project(name, section, buf, config):
