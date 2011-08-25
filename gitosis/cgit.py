@@ -97,8 +97,8 @@ def generate_project_list(config, path):
     buf = StringIO()  # Write to a temporary buffer.
 
     for cgit_group, repos in get_repositories(config):
-        log.debug("Found {0!r} for cgit group {0!r}."
-                  .format(cgit_group, map(operator.itemgetter(1), repos)))
+        log.debug("Found {0!r} for cgit group {1!r}."
+                  .format(map(operator.itemgetter(1), repos), cgit_group))
         if cgit_group:
             buf.write("section = {0}".format(cgit_group) +
                       os.linesep)
