@@ -14,16 +14,18 @@ def getboolean_default(config, section, option, default_value):
     except (NoSectionError, NoOptionError):
         value = default_value
     return value
-def get_default(config, section, option, default_value):
+
+
+def get_default(config, section, option, default=None):
     """
     Return the given section.variable, or return the default if no specific
     value is set.
     """
     try:
-        value = config.get(section, option)
+        return config.get(section, option)
     except (NoSectionError, NoOptionError):
-        value = default_value
-    return value
+        return default
+
 
 class GitosisConfigDict(IterableUserDict):
     def keys(self):
@@ -47,7 +49,7 @@ class GitosisConfigDict(IterableUserDict):
             if _ not in saw:
                 saw.add(_)
                 yield _
-    
+
 
 class GitosisRawConfigParser(RawConfigParser):
     def __init__(self, defaults=None):

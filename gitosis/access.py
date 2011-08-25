@@ -1,100 +1,91 @@
+# -*- coding: utf-8 -*-
 """
-Gitosis access control functions
+    gitosis.access
+    ~~~~~~~~~~~~~~
+
+    This module implements access control functions for :mod:`gitosis`.
+
+    :license: GPL
 """
-import os, logging
+
+import os
+import logging
 from ConfigParser import NoSectionError, NoOptionError
 
-from gitosis import group
+from gitosis import group as _group, configutil
 
-def haveAccess(config, user, mode, path):
-    """
-    Map request for write access to allowed path.
 
-    Note for read-only access, the caller should check for write
-    access too.
+def allowed(config, user, mode, path):
+    """Check if a user is allowed to access a given path.
 
     Returns ``None`` for no access, or a tuple of toplevel directory
-    containing repositories and a relative path to the physical repository.
-    """
-    log = logging.getLogger('gitosis.access.haveAccess')
+    containing repositories and a relative path to the physical
+    repository.
 
-    log.debug(
-        'Access check for %(user)r as %(mode)r on %(path)r...'
-        % dict(
-        user=user,
-        mode=mode,
-        path=path,
-        ))
+    :param config: ``gitosis`` config object
+    :param str user: a user to check access rights for
+    :param str mode: access `readonly` or `writable`
+    :param str path: name of the repository to check access
+                     rights for (this is what you write in ``[repo ... ]``
+                     section of your ``gitosis.conf``)
+    """
+    log = logging.getLogger("gitosis.access.allowed")
+    log.debug("Access check for {0} as {1} on {2}...".format(user, mode, path))
 
     basename, ext = os.path.splitext(path)
-    if ext == '.git':
-        log.debug(
-            'Stripping .git suffix from %(path)r, new value %(basename)r'
-            % dict(
-            path=path,
-            basename=basename,
-            ))
+    if ext == ".git":
+        log.debug("Stripped `.git` suffix from {0}, new value {1}."
+                  .format(path, basename))
         path = basename
 
-    for groupname in group.getMembership(config=config, user=user):
-        try:
-            repos = config.get('group %s' % groupname, mode)
-        except (NoSectionError, NoOptionError):
-            repos = []
-        else:
-            repos = repos.split()
+    ok = False
 
-        mapping = None
+    # a) first check if a user is an owner of the repository
+    #    == has unlimited access.
+    owner = configutil.get_default(config, "repo {0}".format(path), "owner")
+    if owner and owner == user:
+        log.debug("Acces ok for {0!r} as {1!r} on {2!r} (owner)"
+                  .format(user, mode, path))
+        ok = True
+
+    # b) iterate over user's groups and check if it has requested
+    #    pass in any of the sections.
+    for group in _group.getMembership(config=config, user=user):
+        if ok:
+            # do we have a specific repositories directory for this group?
+            prefix = configutil.get_default(
+                config, "group {0}".format(group), "repositories")
+            # if not, try to use the one from 'gitosis' section.
+            prefix = prefix or \
+                configutil.get_default(config, "gitosis", "repositories")
+            # or just use the fallback value
+            prefix = prefix or "repositories"
+
+            log.debug("Using prefix {0!r}for {1!r}".format(prefix, path))
+            return prefix, path
+
+        repos = configutil.get_default(config,
+            "group {0}".format(group), mode, default="").split()
 
         if path in repos:
-            log.debug(
-                'Access ok for %(user)r as %(mode)r on %(path)r'
-                % dict(
-                user=user,
-                mode=mode,
-                path=path,
-                ))
-            mapping = path
+            log.debug("Access ok for {0!r} as {1!r} on {2!r}"
+                      .format(user, mode, path))
+            ok = True
         elif os.path.join(os.path.dirname(path), "*") in repos:
-            log.debug(
-                'Wildcard access ok for %(user)r as %(mode)r on %(path)r'
-                % dict(
-                user=user,
-                mode=mode,
-                path=path,
-                ))
-            mapping = path
+            log.debug("Wildcard access ok for {0!r} as {1!r} on {2!r}"
+                      .format(user, mode, path))
+            ok = True
         else:
             try:
-                mapping = config.get('group %s' % groupname,
-                                     'map %s %s' % (mode, path))
+                mapping = config.get("group {0}".format(group),
+                                     "map {0} {1}".format(mode, path))
             except (NoSectionError, NoOptionError):
                 pass
             else:
-                log.debug(
-                    'Access ok for %(user)r as %(mode)r on %(path)r=%(mapping)r'
-                    % dict(
-                    user=user,
-                    mode=mode,
-                    path=path,
-                    mapping=mapping,
-                    ))
+                log.debug("Access ok for {0!r} as {1!r} on {2!r}={3!r}"
+                          .format(user, mode, path, mapping))
+                ok, path = True, mapping
 
-        if mapping is not None:
-            prefix = None
-            try:
-                prefix = config.get(
-                    'group %s' % groupname, 'repositories')
-            except (NoSectionError, NoOptionError):
-                try:
-                    prefix = config.get('gitosis', 'repositories')
-                except (NoSectionError, NoOptionError):
-                    prefix = 'repositories'
 
-            log.debug(
-                'Using prefix %(prefix)r for %(path)r'
-                % dict(
-                prefix=prefix,
-                path=mapping,
-                ))
-            return (prefix, mapping)
+# Compatibility.
+haveAccess = allowed
