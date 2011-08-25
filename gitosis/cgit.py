@@ -57,10 +57,13 @@ def get_repositories(config):
 
 
 def generate_project(name, path, buf, config):
+    log = logging.getLogger("gitosis.cgit.generate_project")
+
     base_path = util.getRepositoryDir(config)
     path, _ = os.path.splitext(path)
 
     if not os.path.exists(os.path.join(base_path, path)):
+        log.debug("Repo {0} doesn't exist @ {1}.".format(path, base_path))
         return
 
     repo = {
