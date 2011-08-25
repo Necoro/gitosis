@@ -87,7 +87,7 @@ def generate_project(name, section, buf, config):
 
     # ... and write everything to the buffer.
     for item in repo.iteritems():
-        buf.write("{0} = {1}".format(*item) + os.linesep)
+        buf.write("{0}={1}".format(*item) + os.linesep)
     else:
         buf.write(os.linesep)
 
@@ -101,7 +101,7 @@ def generate_project_list(config, path):
         log.debug("Found {0!r} for cgit group {1!r}."
                   .format(map(operator.itemgetter(0), repos), cgit_group))
         if cgit_group:
-            buf.write("section = {0}".format(cgit_group) +
+            buf.write("section={0}".format(cgit_group) +
                       os.linesep)
             buf.write(os.linesep)
 
