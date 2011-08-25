@@ -60,14 +60,17 @@ def generate_project(name, path, buf, config):
     log = logging.getLogger("gitosis.cgit.generate_project")
 
     base_path = util.getRepositoryDir(config)
-    path, _ = os.path.splitext(path)
+
+    # ``gitsis`` requires all repositories to have a .git suffix.
+    if not path.endswith(".git"):
+        path += ".git"
 
     if not os.path.exists(os.path.join(base_path, path)):
         log.debug("Repo {0} doesn't exist @ {1}.".format(path, base_path))
         return
 
     repo = {
-        "repo.url": path + ".git",
+        "repo.url": path,
         "repo.name": name,
         "repo.path": os.path.join(base_path, path),
     }
