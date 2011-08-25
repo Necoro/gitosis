@@ -20,6 +20,7 @@ import logging
 import os
 import operator
 import re
+import subprocess
 from cStringIO import StringIO
 from ConfigParser import NoSectionError, NoOptionError
 
@@ -56,15 +57,21 @@ def find_repositories(config):
         return repos.iteritems()
 
 
-def find_readme(path):
-    for fname in os.listdir(path):
-        if re.match("(?i)^readme", fname) and os.path.isfile(fname):
+def find_readme(path, treeish="master"):
+    git = subprocess.Popen(["git", "ls-tree",
+                            "-r",  # Recurse into subdirectories.
+                            "--name-only",
+                            treeish],
+                            cwd=path,
+                            env={"GIT_DIR": path},
+                            stdout=subprocess.PIPE,
+                            close_fds=True)
+
+    for fname in git.stdout.read().splitlines():
+        if re.match("(?i)readme", fname):
             # The latest version of ``cgit`` seems to refuse readme
             # without refspec.
-            return "master:{0}".format(fname)
-
-    if os.path.isdir(os.path.join(path, "docs")):
-        return find_readme(path)
+            return "{0}:{1}".format(treish, fname)
 
 
 def generate_project(name, section, buf, config):
