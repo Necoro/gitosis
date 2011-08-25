@@ -70,11 +70,11 @@ def generate_project(name, section, buf, config):
         log.debug("Repo {0} doesn't exist @ {1}.".format(path, base_path))
         return
 
-    repo = {
-        "repo.url": path,
-        "repo.name": name,
-        "repo.path": os.path.join(base_path, path),
-    }
+    repo = [
+        ("repo.url", path),
+        ("repo.name", name),
+        ("repo.path", os.path.join(base_path, path)),
+    ]
 
     # Now add optional fields if any is available ...
     for name in optional_fields:
@@ -83,10 +83,10 @@ def generate_project(name, section, buf, config):
         except (NoSectionError, NoOptionError):
             pass
         else:
-            repo[optional_fields.get(name)] = value
+            repo.append((optional_fields[name], value))
 
     # ... and write everything to the buffer.
-    for item in repo.iteritems():
+    for item in repo:
         buf.write("{0}={1}".format(*item) + os.linesep)
     else:
         buf.write(os.linesep)
