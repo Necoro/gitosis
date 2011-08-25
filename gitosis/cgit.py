@@ -21,6 +21,7 @@ import os
 import operator
 from cStringIO import StringIO
 from ConfigParser import NoSectionError, NoOptionError
+from functools import partial
 
 from gitosis import util
 from gitosis.configutil import getboolean_default, get_default
@@ -97,8 +98,8 @@ def generate_project_list(config, path):
                       os.linesep)
             buf.write(os.linesep)
 
-        for name, path in repos:
-            generate_project(name, path, buf, config)
+        map(lambda (name, path): generate_project(name, path, buf, config),
+            repos)
 
     log.debug("Saving to {0} ...".format(path))
     with open(path, "w") as fp:
