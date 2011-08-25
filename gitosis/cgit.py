@@ -14,8 +14,11 @@
     :license: GPL
 """
 
+from __future__ import with_statement
+
 import logging
 import os
+import operator
 from cStringIO import StringIO
 from ConfigParser import NoSectionError, NoOptionError
 
@@ -82,9 +85,13 @@ def generate_project(name, path, buf, config):
 
 
 def generate_project_list(config, path):
+    log = logging.getLogger("gitosis.cgit.generate_project_list")
+    log.debug("Generating `repos.list` file @ {0}.".format(path))
     buf = StringIO()  # Write to a temporary buffer.
 
     for cgit_group, repos in get_repositories(config):
+        log.debug("Found {0!r} for cgit group {0!r}."
+                  .format(cgit_group, map(operator.itemgetter(1), repos)))
         if cgit_group:
             buf.write("section = {0}".format(cgit_group) +
                       os.linesep)
@@ -93,9 +100,11 @@ def generate_project_list(config, path):
         for name, path in repos:
             generate_project(name, path, buf, config)
 
+    log.debug("Saving to {0} ...".format(path))
     with open(path, "w") as fp:
         fp.write(buf.getvalue())
         fp.close()
+    log.debug("Done.")
 
 
 logging.basicConfig()
