@@ -19,9 +19,9 @@ from __future__ import with_statement
 import logging
 import os
 import operator
+import re
 from cStringIO import StringIO
 from ConfigParser import NoSectionError, NoOptionError
-from functools import partial
 
 from gitosis import util
 from gitosis.configutil import getboolean_default, get_default
@@ -36,7 +36,7 @@ optional_fields = {"description": "repo.desc",
                    "defbranch": "repo.defbranch"}
 
 
-def get_repositories(config):
+def find_repositories(config):
     """Returns a mapping of gitosis repositories, grouped by ``cgit_group``."""
     repos = {}  # Grouped by ``cgit_group``.
     global_enable = getboolean_default(config, "gitosis", "cgit", False)
@@ -54,6 +54,15 @@ def get_repositories(config):
         repos.setdefault(cgit_group, []).append((cgit_name, section))
     else:
         return repos.iteritems()
+
+
+def find_readme(path):
+    for fname in os.listdir(path):
+        if re.match("(?i)^readme", fname) and os.path.isfile(fname):
+            return fname
+
+    if os.path.isdir(os.path.join(path, "docs")):
+        return find_readme(path)
 
 
 def generate_project(name, section, buf, config):
@@ -81,8 +90,13 @@ def generate_project(name, section, buf, config):
         try:
             value = config.get(section, name)
         except (NoSectionError, NoOptionError):
-            pass
-        else:
+            # If readme is not explicitly given, try to guess it.
+            if name == "readme":
+                value = find_readme(os.path.join(base_path, path))
+            else:
+                continue
+
+        if value:
             repo.append((optional_fields[name], value))
 
     # ... and write everything to the buffer.
@@ -97,7 +111,7 @@ def generate_project_list(config, path):
     log.debug("Generating `repos.list` file @ {0}.".format(path))
     buf = StringIO()  # Write to a temporary buffer.
 
-    for cgit_group, repos in get_repositories(config):
+    for cgit_group, repos in find_repositories(config):
         log.debug("Found {0!r} for cgit group {1!r}."
                   .format(map(operator.itemgetter(0), repos), cgit_group))
         if cgit_group:
