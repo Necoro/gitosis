@@ -51,14 +51,15 @@ def get_repositories(config):
 
         cgit_group = get_default(config, section, "cgit_group", "")
         cgit_name  = get_default(config, section, "cgit_name", data[1])
-        repos.setdefault(cgit_group, []).append((cgit_name, data[1]))
+        repos.setdefault(cgit_group, []).append((cgit_name, section))
     else:
         return repos.iteritems()
 
 
-def generate_project(name, path, buf, config):
+def generate_project(name, section, buf, config):
     log = logging.getLogger("gitosis.cgit.generate_project")
 
+    _, path = section.split(" ", 1)
     base_path = util.getRepositoryDir(config)
 
     # ``gitsis`` requires all repositories to have a .git suffix.
@@ -78,7 +79,7 @@ def generate_project(name, path, buf, config):
     # Now add optional fields if any is available ...
     for name in optional_fields:
         try:
-            value = config.get("repo {0}".format(path), name)
+            value = config.get(section, name)
         except (NoSectionError, NoOptionError):
             pass
         else:
@@ -98,13 +99,15 @@ def generate_project_list(config, path):
 
     for cgit_group, repos in get_repositories(config):
         log.debug("Found {0!r} for cgit group {1!r}."
-                  .format(map(operator.itemgetter(1), repos), cgit_group))
+                  .format(map(operator.itemgetter(0), repos), cgit_group))
         if cgit_group:
             buf.write("section = {0}".format(cgit_group) +
                       os.linesep)
             buf.write(os.linesep)
 
-        map(lambda (name, path): generate_project(name, path, buf, config),
+        map(lambda (name, section): generate_project(name,
+                                                     section,
+                                                     buf, config),
             repos)
 
     log.debug("Saving to {0} ...".format(path))
