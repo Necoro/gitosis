@@ -1,30 +1,17 @@
+# -*- coding: utf-8 -*-
 """
-Useful wrapper functions to access ConfigParser structures.
+    gitosis.config
+    ~~~~~~~~~~~~~~
+
+    This module implements a tiny wrapper around
+    :class:`~ConfigParser.ConfigParser` -- because raw `ConfigParser`
+    is barely usable.
+
+    :license: GPL
 """
+
 from ConfigParser import NoSectionError, NoOptionError, RawConfigParser
 from UserDict import IterableUserDict
-
-def getboolean_default(config, section, option, default_value):
-    """
-    Return the given section.variable, or return the default if no specific
-    value is set.
-    """
-    try:
-        value = config.getboolean(section, option)
-    except (NoSectionError, NoOptionError):
-        value = default_value
-    return value
-
-
-def get_default(config, section, option, default=None):
-    """
-    Return the given section.variable, or return the default if no specific
-    value is set.
-    """
-    try:
-        return config.get(section, option)
-    except (NoSectionError, NoOptionError):
-        return default
 
 
 class GitosisConfigDict(IterableUserDict):
@@ -56,3 +43,18 @@ class GitosisRawConfigParser(RawConfigParser):
         RawConfigParser.__init__(self, defaults)
         self._sections = GitosisConfigDict(self._sections)
 
+    def get(self, section, option, default=None):
+        """Same as :meth:`dict.get` but for
+        :class:`~ConfigParser.ConfigParser` instances."""
+        try:
+            return RawConfigParser.get(self, section, option)
+        except (NoSectionError, NoOptionError):
+            return default
+
+    def getboolean(self, section, option, default=False):
+        try:
+            return RawConfigParser.getboolean(self, section, option)
+        except (ValueError, AttributeError):
+            return default
+
+    # FIXME: add getfloat() and getint() with default value.

@@ -4,7 +4,6 @@ Some utility functions for Gitosis
 import errno
 import os
 import shutil
-from ConfigParser import NoSectionError, NoOptionError
 
 def mkdir(newdir, mode=0777):
     """
@@ -45,39 +44,30 @@ def getRepositoryDir(config):
     """
         Find the location of the Git repositories.
 
-        Tries: 
+        Tries:
         - ``gitosis.repositories`` configuration key (see note)
         - ``~/repositories``
 
         Note: If the configuration key is a relative path, it is appended onto
         the homedir for the gitosis user.
     """
-    repositories = os.path.expanduser('~')
-    try:
-        path = config.get('gitosis', 'repositories')
-    except (NoSectionError, NoOptionError):
-        repositories = os.path.join(repositories, 'repositories')
-    else:
-        repositories = os.path.join(repositories, path)
-    return repositories
+    home = os.path.expanduser("~")
+    return os.path.join(home,
+        config.get("gitosis", "repositories", default="repositories"))
+
 
 def getGeneratedFilesDir(config):
     """
         Find the location for the generated Gitosis files.
 
-        Tries: 
+        Tries:
         - ``gitosis.generate-files-in`` configuration key
         - ``~/gitosis``
     """
-    try:
-        generated = config.get('gitosis', 'generate-files-in')
-    except (NoSectionError, NoOptionError):
-        generated = os.path.expanduser('~/gitosis')
-    return generated
+    return config.get("gitosis", "generate-files-in",
+                      default=os.path.expanduser("~/gitosis"))
+
 
 def getSSHAuthorizedKeysPath(config):
-    try:
-        path = config.get('gitosis', 'ssh-authorized-keys-path')
-    except (NoSectionError, NoOptionError):
-        path = os.path.expanduser('~/.ssh/authorized_keys')
-    return path
+    return config.get("gitosis", "ssh-authorized-keys-path",
+                      default=os.path.expanduser("~/.ssh/authorized_keys"))

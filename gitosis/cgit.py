@@ -22,10 +22,8 @@ import operator
 import re
 import subprocess
 from cStringIO import StringIO
-from ConfigParser import NoSectionError, NoOptionError
 
 from gitosis import util
-from gitosis.configutil import getboolean_default, get_default
 
 
 #: A mapping of fields from ``gitosis.conf`` to fields in
@@ -40,18 +38,18 @@ optional_fields = {"description": "repo.desc",
 def find_repositories(config):
     """Returns a mapping of gitosis repositories, grouped by ``cgit_group``."""
     repos = {}  # Grouped by ``cgit_group``.
-    global_enable = getboolean_default(config, "gitosis", "cgit", False)
+    global_enable = config.getboolean("gitosis", "cgit", default=False)
 
     for section in config.sections():
         data = section.split(" ", 1)
         if not data or data[0] != "repo":
             continue
 
-        if not getboolean_default(config, section, "cgit", global_enable):
+        if not config.getboolean(section, "cgit", default=global_enable):
             continue
 
-        cgit_group = get_default(config, section, "cgit_group", "")
-        cgit_name  = get_default(config, section, "cgit_name", data[1])
+        cgit_group = config.get(section, "cgit_group", default="")
+        cgit_name  = config.get(section, "cgit_name", default=data[1])
         repos.setdefault(cgit_group, []).append((cgit_name, section))
     else:
         return repos.iteritems()
@@ -96,9 +94,8 @@ def generate_project(name, section, buf, config):
 
     # Now add optional fields if any is available ...
     for name in optional_fields:
-        try:
-            value = config.get(section, name)
-        except (NoSectionError, NoOptionError):
+        value = config.get(section, name)
+        if not value:
             # If readme is not explicitly given, try to guess it.
             if name == "readme":
                 value = find_readme(os.path.join(base_path, path))

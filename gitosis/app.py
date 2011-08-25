@@ -5,7 +5,8 @@ import logging
 import optparse
 import errno
 import ConfigParser
-from gitosis import configutil
+
+from gitosis.config import GitosisRawConfigParser
 
 # C0103 - 'log' is a special name
 # pylint: disable-msg=C0103
@@ -69,7 +70,7 @@ class App(object):
 
     def create_config(self, options):
         """Handle config file parsing."""
-        cfg = configutil.GitosisRawConfigParser()
+        cfg = GitosisRawConfigParser()
         return cfg
 
     def read_config(self, options, cfg):
@@ -90,12 +91,8 @@ class App(object):
 
     def setup_logging(self, cfg):
         """Set up the full logging, using the configuration."""
-        try:
-            loglevel = cfg.get('gitosis', 'loglevel')
-        except (ConfigParser.NoSectionError,
-                ConfigParser.NoOptionError):
-            pass
-        else:
+        loglevel = cfg.get('gitosis', 'loglevel')
+        if loglevel:
             try:
                 # logging really should declare the symbolics
                 # pylint: disable-msg=W0212

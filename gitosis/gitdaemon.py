@@ -13,7 +13,6 @@ import os
 log = logging.getLogger('gitosis.gitdaemon')
 
 from gitosis import util
-from gitosis.configutil import getboolean_default
 
 def export_ok_path(repopath):
     """
@@ -47,7 +46,7 @@ def _is_global_repo_export_ok(config):
     """
     Does the global Gitosis configuration allow daemon exporting?
     """
-    global_enable = getboolean_default(config, 'gitosis', 'daemon', False)
+    global_enable = config.getboolean('gitosis', 'daemon', default=False)
     log.debug(
         'Global default is %r',
         {True: 'allow', False: 'deny'}.get(global_enable),
@@ -60,7 +59,7 @@ def _is_repo_export_ok(global_enable, config, reponame):
     exporting?
     """
     section = 'repo %s' % reponame
-    return getboolean_default(config, section, 'daemon', global_enable)
+    return config.getboolean(section, 'daemon', default=global_enable)
 
 def _set_export_ok_single(enable, name, dirpath, repo):
     """
@@ -114,6 +113,6 @@ def set_export_ok(config):
             if reldir != '.':
                 name = os.path.join(reldir, name)
             assert ext == '.git'
-            
+
             enable = _is_repo_export_ok(global_enable, config, name)
             _set_export_ok_single(enable, name, dirpath, repo)

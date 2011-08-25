@@ -10,9 +10,8 @@
 
 import os
 import logging
-from ConfigParser import NoSectionError, NoOptionError
 
-from gitosis import group as _group, configutil
+from gitosis import group as _group
 
 
 def allowed(config, user, mode, path):
@@ -42,7 +41,7 @@ def allowed(config, user, mode, path):
 
     # a) first check if a user is an owner of the repository
     #    == has unlimited access.
-    owner = configutil.get_default(config, "repo {0}".format(path), "owner")
+    owner = config.get(config, "repo {0}".format(path), "owner")
     if owner and owner == user:
         log.debug("Acces ok for {0!r} as {1!r} on {2!r} (owner)"
                   .format(user, mode, path))
@@ -53,20 +52,17 @@ def allowed(config, user, mode, path):
     for group in _group.getMembership(config=config, user=user):
         if ok:
             # do we have a specific repositories directory for this group?
-            prefix = configutil.get_default(
-                config, "group {0}".format(group), "repositories")
+            prefix = config.get("group {0}".format(group), "repositories")
             # if not, try to use the one from 'gitosis' section.
             prefix = prefix or \
-                configutil.get_default(config, "gitosis", "repositories")
+                config.get(config, "gitosis", default="repositories")
             # or just use the fallback value
             prefix = prefix or "repositories"
 
             log.debug("Using prefix {0!r}for {1!r}".format(prefix, path))
             return prefix, path
 
-        repos = configutil.get_default(config,
-            "group {0}".format(group), mode, default="").split()
-
+        repos = config.get("group {0}".format(group), mode, default="").split()
         if path in repos:
             log.debug("Access ok for {0!r} as {1!r} on {2!r}"
                       .format(user, mode, path))
@@ -76,12 +72,9 @@ def allowed(config, user, mode, path):
                       .format(user, mode, path))
             ok = True
         else:
-            try:
-                mapping = config.get("group {0}".format(group),
-                                     "map {0} {1}".format(mode, path))
-            except (NoSectionError, NoOptionError):
-                pass
-            else:
+            mapping = config.get("group {0}".format(group),
+                                 "map {0} {1}".format(mode, path))
+            if mapping:
                 log.debug("Access ok for {0!r} as {1!r} on {2!r}={3!r}"
                           .format(user, mode, path, mapping))
                 ok, path = True, mapping

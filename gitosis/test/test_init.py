@@ -5,7 +5,7 @@ import os
 
 from gitosis import init
 from gitosis import repository
-from gitosis.configutil import GitosisRawConfigParser
+from gitosis.config import GitosisRawConfigParser
 
 from gitosis.test import util
 

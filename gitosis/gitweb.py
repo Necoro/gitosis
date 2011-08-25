@@ -27,10 +27,7 @@ To plug this into ``gitweb``, you have two choices.
 
 import os, urllib, logging
 
-from ConfigParser import NoSectionError, NoOptionError
-
 from gitosis import util
-from gitosis.configutil import getboolean_default
 
 def _escape_filename(i):
     """Try to make the filename safer."""
@@ -53,14 +50,14 @@ def generate_project_list_fp(config, fp):
 
     repositories = util.getRepositoryDir(config)
 
-    global_enable = getboolean_default(config, 'gitosis', 'gitweb', False)
+    global_enable = config.getboolean('gitosis', 'gitweb', default=False)
 
     for section in config.sections():
         sectiontitle = section.split(None, 1)
         if not sectiontitle or sectiontitle[0] != 'repo':
             continue
 
-        enable = getboolean_default(config, section, 'gitweb', global_enable)
+        enable = config.getboolean(section, 'gitweb', default=global_enable)
 
         if not enable:
             continue
@@ -70,11 +67,8 @@ def generate_project_list_fp(config, fp):
         name = _repository_exists(log, repositories, name, name)
 
         response = [name]
-        try:
-            owner = config.get(section, 'owner')
-        except (NoSectionError, NoOptionError):
-            pass
-        else:
+        owner = config.get(section, 'owner')
+        if owner:
             response.append(owner)
 
         line = ' '.join([urllib.quote_plus(_) for _ in response])
@@ -131,11 +125,7 @@ def set_descriptions(config):
         if not sectiontitle or sectiontitle[0] != 'repo':
             continue
 
-        try:
-            description = config.get(section, 'description')
-        except (NoSectionError, NoOptionError):
-            continue
-
+        description = config.get(section, 'description')
         if not description: #pragma: no cover
             continue
 
