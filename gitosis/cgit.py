@@ -59,7 +59,9 @@ def find_repositories(config):
 def find_readme(path):
     for fname in os.listdir(path):
         if re.match("(?i)^readme", fname) and os.path.isfile(fname):
-            return fname
+            # The latest version of ``cgit`` seems to refuse readme
+            # without refspec.
+            return "master:{0}".format(fname)
 
     if os.path.isdir(os.path.join(path, "docs")):
         return find_readme(path)
