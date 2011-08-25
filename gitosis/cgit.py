@@ -9,7 +9,7 @@
 
     To plug this into `cgit`, put the following into your ``.cgitrc``::
 
-      include=/path/to/your/repos.list
+        include=/path/to/your/repos.list
 
     :license: GPL
 """
