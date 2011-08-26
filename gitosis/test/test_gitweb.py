@@ -64,8 +64,8 @@ def test_projectsList_multiple():
         config=cfg,
         fp=got)
     eq(got.getvalue(), '''\
-quux
 foo%2Fbar John+Doe
+quux
 ''')
 
 def test_projectsList_multiple_globalGitwebYes():
@@ -85,8 +85,8 @@ def test_projectsList_multiple_globalGitwebYes():
         config=cfg,
         fp=got)
     eq(got.getvalue(), '''\
-quux
 foo%2Fbar John+Doe
+quux
 ''')
 
 def test_projectsList_reallyEndsWithGit():

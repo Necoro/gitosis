@@ -3,7 +3,7 @@ from nose.tools import eq_ as eq
 import os
 
 from gitosis import gitdaemon
-from gitosis.config import GitosisConfigParser as RawConfigParser
+from gitosis.config import GitosisRawConfigParser as RawConfigParser
 from gitosis.test.util import maketemp, writeFile
 
 def exported(path):

@@ -46,33 +46,29 @@ def generate_project_list_fp(config, fp):
     :param fp: writable for ``projects.list``
     :type fp: (file-like, anything with ``.write(data)``)
     """
-    log = logging.getLogger('gitosis.gitweb.generate_projects_list')
-
-    repositories = util.getRepositoryDir(config)
-
-    global_enable = config.getboolean('gitosis', 'gitweb', default=False)
+    log = logging.getLogger("gitosis.gitweb.generate_projects_list")
+    repositories = config.repository_dir
+    global_enable = config.getboolean("gitosis", "gitweb", default=False)
 
     for section in config.sections():
-        sectiontitle = section.split(None, 1)
-        if not sectiontitle or sectiontitle[0] != 'repo':
-            continue
+        try:
+            type, value = section.split(None, 1)
+        except ValueError:
+            continue  # Malformed section header?
+        else:
+            if type != "repo": continue
 
-        enable = config.getboolean(section, 'gitweb', default=global_enable)
+        if not config.getboolean(section, "gitweb", default=global_enable):
+            continue  # Disabled?
 
-        if not enable:
-            continue
+        line = []
+        line.append(_repository_exists(log, repositories, value, value))
 
-        name = sectiontitle[1]
-
-        name = _repository_exists(log, repositories, name, name)
-
-        response = [name]
-        owner = config.get(section, 'owner')
+        owner = config.get(section, "owner")
         if owner:
-            response.append(owner)
+            line.append(owner)
 
-        line = ' '.join([urllib.quote_plus(_) for _ in response])
-        print >> fp, line
+        fp.write(" ".join(map(urllib.quote_plus, line)) + os.linesep)
 
 
 def _repository_exists(log, repositories, name, default_value):
