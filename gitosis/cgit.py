@@ -24,6 +24,9 @@ import subprocess
 from cStringIO import StringIO
 
 
+#: Logger for ``cgit`` module.
+log = logging.getLogger("gitosis.cgit")
+
 #: A mapping of fields from ``gitosis.conf`` to fields in
 #: ``project.list``.
 optional_fields = {"description": "repo.desc",
@@ -71,8 +74,6 @@ def find_readme(path, treeish="master"):
 
 
 def generate_project(name, section, buf, config):
-    log = logging.getLogger("gitosis.cgit.generate_project")
-
     _, path = section.split(" ", 1)
     base_path = config.repository_dir
 
@@ -111,7 +112,6 @@ def generate_project(name, section, buf, config):
 
 
 def generate_project_list(config, path):
-    log = logging.getLogger("gitosis.cgit.generate_project_list")
     log.debug("Generating `repos.list` file @ {0}.".format(path))
     buf = StringIO()  # Write to a temporary buffer.
 
