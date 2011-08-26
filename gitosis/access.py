@@ -14,6 +14,20 @@ import logging
 from gitosis import group as _group
 
 
+def get_repository_prefix(config, group = None):
+    if group:
+        # do we have a specific repositories directory for this group?
+        prefix = config.get("group {0}".format(group), "repositories")
+    else:
+        prefix = None
+
+    # if not, try to use the one from 'gitosis' section.
+    prefix = prefix or \
+        config.get("gitosis", "repositories", default="repositories")
+    # or just use the fallback value
+    return prefix or "repositories"
+
+
 def allowed(config, user, mode, path):
     """Check if a user is allowed to access a given path.
 
@@ -37,31 +51,18 @@ def allowed(config, user, mode, path):
                   .format(path, basename))
         path = basename
 
-    ok = False
-
     # a) first check if a user is an owner of the repository
     #    == has unlimited access.
-    owner = config.get(config, "repo {0}".format(path), "owner")
+    owner = config.get("repo {0}".format(path), "owner")
     if owner and owner == user:
         log.debug("Acces ok for {0!r} as {1!r} on {2!r} (owner)"
                   .format(user, mode, path))
-        ok = True
+        return get_repository_prefix(config), path
 
     # b) iterate over user's groups and check if it has requested
     #    pass in any of the sections.
+    ok = False
     for group in _group.getMembership(config=config, user=user):
-        if ok:
-            # do we have a specific repositories directory for this group?
-            prefix = config.get("group {0}".format(group), "repositories")
-            # if not, try to use the one from 'gitosis' section.
-            prefix = prefix or \
-                config.get(config, "gitosis", default="repositories")
-            # or just use the fallback value
-            prefix = prefix or "repositories"
-
-            log.debug("Using prefix {0!r}for {1!r}".format(prefix, path))
-            return prefix, path
-
         repos = config.get("group {0}".format(group), mode, default="").split()
         if path in repos:
             log.debug("Access ok for {0!r} as {1!r} on {2!r}"
@@ -74,10 +75,16 @@ def allowed(config, user, mode, path):
         else:
             mapping = config.get("group {0}".format(group),
                                  "map {0} {1}".format(mode, path))
+
             if mapping:
                 log.debug("Access ok for {0!r} as {1!r} on {2!r}={3!r}"
                           .format(user, mode, path, mapping))
                 ok, path = True, mapping
+
+        if ok:
+            prefix = get_repository_prefix(config, group)
+            log.debug("Using prefix {0!r}for {1!r}".format(prefix, path))
+            return prefix, path
 
 
 # Compatibility.
