@@ -592,6 +592,5 @@ def test_typo_writeable():
     handler.flush()
     eq(
         buf.getvalue(),
-        """Got command 'git-receive-pack' and args "'foo'"
-Repository 'foo' config has typo "writeable", should be "writable"
+        """Repository 'foo' config has typo "writeable", should be "writable"
 """)

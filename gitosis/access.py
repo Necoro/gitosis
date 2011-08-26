@@ -85,7 +85,3 @@ def allowed(config, user, mode, path):
             prefix = get_repository_prefix(config, group)
             log.debug("Using prefix {0!r}for {1!r}".format(prefix, path))
             return prefix, path
-
-
-# Compatibility.
-haveAccess = allowed

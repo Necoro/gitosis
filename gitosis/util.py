@@ -11,7 +11,6 @@
 import errno
 import os
 import shutil
-import warnings
 
 
 def catch(func, ignore=[]):
@@ -30,19 +29,3 @@ def catch(func, ignore=[]):
 mkdir = catch(os.mkdir, [errno.EEXIST])
 unlink = catch(os.unlink, [errno.ENOENT])
 rmtree = catch(shutil.rmtree, [errno.ENOENT])
-
-
-# Deprecated folks.
-
-def getRepositoryDir(config):
-    warnings.warn("deprecated", DeprecationWarning)
-    return config.repository_dir
-
-
-def getGeneratedFilesDir(config):
-    warnings.warn("deprecated", DeprecationWarning)
-    return config.generated_files_dir
-
-def getSSHAuthorizedKeysPath(config):
-    warnings.warn("deprecated", DeprecationWarning)
-    return config.ssh_authorized_keys_path

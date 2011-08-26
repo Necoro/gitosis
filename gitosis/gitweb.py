@@ -114,7 +114,7 @@ def set_descriptions(config):
     """
     log = logging.getLogger('gitosis.gitweb.set_descriptions')
 
-    repositories = util.getRepositoryDir(config)
+    repositories = config.repository_dir
 
     for section in config.sections():
         sectiontitle = section.split(None, 1)

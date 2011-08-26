@@ -145,10 +145,10 @@ class Main(app.App):
             sys.exit(1)
         log.info('Admin user is %r', user)
         log.info('Creating generated files directory...')
-        generated = util.getGeneratedFilesDir(config=cfg)
+        generated = cfg.generated_files_dir
         util.mkdir(generated)
         log.info('Creating repository structure...')
-        repositories = util.getRepositoryDir(cfg)
+        repositories = cfg.repository_dir
         util.mkdir(repositories)
         admin_repository = os.path.join(repositories, 'gitosis-admin.git')
         init_admin_repository(

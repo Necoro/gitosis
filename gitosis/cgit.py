@@ -23,8 +23,6 @@ import re
 import subprocess
 from cStringIO import StringIO
 
-from gitosis import util
-
 
 #: A mapping of fields from ``gitosis.conf`` to fields in
 #: ``project.list``.
@@ -76,7 +74,7 @@ def generate_project(name, section, buf, config):
     log = logging.getLogger("gitosis.cgit.generate_project")
 
     _, path = section.split(" ", 1)
-    base_path = util.getRepositoryDir(config)
+    base_path = config.repository_dir
 
     # ``gitsis`` requires all repositories to have a .git suffix.
     if not path.endswith(".git"):

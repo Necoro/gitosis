@@ -25,7 +25,7 @@ def build_reposistory_data(config):
     gitweb.set_descriptions(
         config=config,
         )
-    generated = util.getGeneratedFilesDir(config=config)
+    generated = config.generated_files_dir
     gitweb.generate_project_list(
         config=config,
         path=os.path.join(generated, 'projects.list'),
@@ -59,7 +59,7 @@ def post_update(cfg, git_dir): #pragma: no cover
     # re-read config to get up-to-date settings
     cfg.read(os.path.join(export, '..', 'gitosis.conf'))
     build_reposistory_data(cfg)
-    authorized_keys = util.getSSHAuthorizedKeysPath(config=cfg)
+    authorized_keys = cfg.ssh_authorized_keys_path
     ssh.writeAuthorizedKeys(
         path=authorized_keys,
         keydir=os.path.join(export, 'keydir'),

@@ -87,7 +87,7 @@ def serve(cfg, user, command):
 
     if args.startswith("'/") and args.endswith("'"):
         args = args[1:-1]
-        repos = util.getRepositoryDir(cfg)
+        repos = cfg.repository_dir
         reposreal = os.path.realpath(repos)
         if args.startswith(repos):
             args = os.path.realpath(args)[len(repos)+1:]
@@ -104,7 +104,7 @@ def serve(cfg, user, command):
     path = match.group('path')
 
     # write access is always sufficient
-    newpath = access.haveAccess(
+    newpath = access.allowed(
         config=cfg,
         user=user,
         mode='writable',
@@ -113,14 +113,13 @@ def serve(cfg, user, command):
     if newpath is None:
         # didn't have write access; try once more with the popular
         # misspelling
-        newpath = access.haveAccess(
+        newpath = access.allowed(
             config=cfg,
             user=user,
             mode='writeable',
             path=path)
         if newpath is not None:
-            log.warning(
-                'Repository %r config has typo "writeable", '
+            log.warning('Repository %r config has typo "writeable", '
                 +'should be "writable"',
                 path,
                 )
@@ -128,7 +127,7 @@ def serve(cfg, user, command):
     if newpath is None:
         # didn't have write access
 
-        newpath = access.haveAccess(
+        newpath = access.allowed(
             config=cfg,
             user=user,
             mode='readonly',
@@ -200,7 +199,7 @@ class Main(app.App):
 
         os.environ['GITOSIS_USER'] = user
 
-        userfile=os.path.join(util.getRepositoryDir(cfg),'gitosis-admin.git','gitosis-export','keydir',user+'.pub')
+        userfile=os.path.join(cfg.repository_dir,'gitosis-admin.git','gitosis-export','keydir',user+'.pub')
         try:
             userdata=open(userfile, 'r').readline()
         except:

@@ -78,7 +78,7 @@ def set_export_ok(config):
     Walk all repositories owned by Gitosis, and manage the
     ``git-daemon-export-ok`` markers.
     """
-    repositories = util.getRepositoryDir(config)
+    repositories = config.repository_dir
     global_enable = _is_global_repo_export_ok(config)
 
     def _error(ex): #pragma: no cover
