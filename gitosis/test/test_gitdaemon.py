@@ -1,9 +1,9 @@
 from nose.tools import eq_ as eq
 
 import os
-from ConfigParser import RawConfigParser
 
 from gitosis import gitdaemon
+from gitosis.config import GitosisConfigParser as RawConfigParser
 from gitosis.test.util import maketemp, writeFile
 
 def exported(path):

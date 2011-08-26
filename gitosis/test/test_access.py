@@ -1,9 +1,10 @@
 from nose.tools import eq_ as eq
 
 import logging
-from ConfigParser import RawConfigParser
 
 from gitosis import access
+from gitosis.config import GitosisRawConfigParser as RawConfigParser
+
 
 def test_write_no_simple():
     cfg = RawConfigParser()

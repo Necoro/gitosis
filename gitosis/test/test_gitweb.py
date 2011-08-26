@@ -1,10 +1,10 @@
 from nose.tools import eq_ as eq
 
 import os
-from ConfigParser import RawConfigParser
 from cStringIO import StringIO
 
 from gitosis import gitweb
+from gitosis.config import GitosisRawConfigParser as RawConfigParser
 from gitosis.test.util import mkdir, maketemp, readFile, writeFile
 
 def test_projectsList_empty():
