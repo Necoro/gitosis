@@ -6,13 +6,8 @@ import logging
 import os
 import sys
 
-from gitosis import repository
-from gitosis import ssh
-from gitosis import gitweb
-from gitosis import cgit
-from gitosis import gitdaemon
-from gitosis import app
-from gitosis import util
+from gitosis import repository, ssh, gitweb, cgit, gitdaemon, app, util
+
 
 def build_reposistory_data(config):
     """
@@ -22,21 +17,13 @@ def build_reposistory_data(config):
 
     :type config: RawConfigParser
     """
-    gitweb.set_descriptions(
-        config=config,
-        )
-    generated = config.generated_files_dir
-    gitweb.generate_project_list(
-        config=config,
-        path=os.path.join(generated, 'projects.list'),
-        )
-    cgit.generate_project_list(
-        config=config,
-        path=os.path.join(generated, 'repos.list'),
-        )
-    gitdaemon.set_export_ok(
-        config=config,
-        )
+    gitdaemon.export(config)
+    gitweb.set_descriptions(config)
+    gitweb.generate_project_list(config,
+        os.path.join(config.generated_files_dir, "projects.list"))
+    cgit.generate_project_list(config,
+        os.path.join(config.generated_files_dir, "repos.list"))
+
 
 def post_update(cfg, git_dir): #pragma: no cover
     """

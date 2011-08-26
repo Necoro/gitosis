@@ -1,118 +1,70 @@
+# -*- coding: utf-8 -*-
 """
-Gitosis git-daemon functionality.
+    gitosis.gitdaemon
+    ~~~~~~~~~~~~~~~~~
 
-Handles the ``git-daemon-export-ok`` marker files for all repositories managed
-by Gitosis.
+    This module handles the ``git-daemon-export-ok`` marker files for
+    all repositories managed by :mod:`gitosis`.
+
+    :license: GPL
 """
-import errno
+
 import logging
 import os
 
-# C0103 - 'log' is a special name
-# pylint: disable-msg=C0103
-log = logging.getLogger('gitosis.gitdaemon')
-
 from gitosis import util
 
-def export_ok_path(repopath):
-    """
-    Return the path the ``git-daemon-export-ok`` marker for a given repository.
-    """
-    path = os.path.join(repopath, 'git-daemon-export-ok')
-    return path
+log = logging.getLogger("gitosis.gitdaemon")
 
-def allow_export(repopath):
-    """Create the ``git-daemon-export-ok`` marker for a given repository."""
-    path = export_ok_path(repopath)
-    file(path, 'a').close()
 
-def deny_export(repopath):
-    """Remove the ``git-daemon-export-ok`` marker for a given repository."""
-    path = export_ok_path(repopath)
-    util.unlink(path)
+def export_path(path):
+    """Returns ``git-daemon-export-ok`` path for a given repository."""
+    return os.path.join(path, "git-daemon-export-ok")
 
-def _extract_reldir(topdir, dirpath):
-    """
-    Find the relative directory given a base directory & a child directory.
-    """
-    if topdir == dirpath:
-        return '.'
-    prefix = topdir + '/'
-    assert dirpath.startswith(prefix)
-    reldir = dirpath[len(prefix):]
-    return reldir
 
-def _is_global_repo_export_ok(config):
+def export_one(path, enable=True):
+    """Enables (default) or disables repository export at a given
+    `path`, based on `enable` value.
     """
-    Does the global Gitosis configuration allow daemon exporting?
-    """
-    global_enable = config.getboolean('gitosis', 'daemon', default=False)
-    log.debug(
-        'Global default is %r',
-        {True: 'allow', False: 'deny'}.get(global_enable),
-        )
-    return global_enable
-
-def _is_repo_export_ok(global_enable, config, reponame):
-    """
-    Does the Gitosis configuration for the named reposistory allow daemon
-    exporting?
-    """
-    section = 'repo %s' % reponame
-    return config.getboolean(section, 'daemon', default=global_enable)
-
-def _set_export_ok_single(enable, name, dirpath, repo):
-    """
-    Manage the ``git-daemon-export-ok`` marker for a single repository.
-    """
-    repopath = os.path.join(dirpath, repo)
     if enable:
-        log.debug('Allow %r', name)
-        allow_export(repopath)
+        log.debug("Allow {0!r}".format(path))
+        open(export_path(path), "a").close()
     else:
-        log.debug('Deny %r', name)
-        deny_export(repopath)
+        log.debug("Deny {0!r}".format(path))
+        util.unlink(export_path(path))
 
-def set_export_ok(config):
-    """
-    Walk all repositories owned by Gitosis, and manage the
+
+def export(config):
+    """Walks all repositories owned by :mod:`gitosis`, and manage the
     ``git-daemon-export-ok`` markers.
     """
-    repositories = config.repository_dir
-    global_enable = _is_global_repo_export_ok(config)
+    global_enable = config.getboolean("gitosis", "daemon")
+    log.debug("Global default is {0!r}"
+              .format(["allow", "deny"][global_enable]))
 
-    def _error(ex): #pragma: no cover
-        """Ignore non-existant items."""
-        if ex.errno == errno.ENOENT:
-            pass
-        else:
-            raise ex
+    base_dir = config.repository_dir
+    for dirpath, dirnames, _ in util.walk(base_dir):
+        # Repository path, relative to base repository directory.
+        reldir = os.path.relpath(dirpath, base_dir)
+        reldir = reldir if reldir != "." else ""
 
-    for (dirpath, dirnames, _) \
-            in os.walk(repositories, onerror=_error):
-        # oh how many times i have wished for os.walk to report
-        # topdir and reldir separately, instead of dirpath
-        reldir = _extract_reldir(
-            topdir=repositories,
-            dirpath=dirpath,
-            )
+        log.debug("Walking {0!r}, seeing {1!r}".format(reldir, dirnames))
 
-        log.debug('Walking %r, seeing %r', reldir, dirnames)
-
-        to_recurse = []
-        repos = []
-        for dirname in dirnames:
-            if dirname.endswith('.git'):
-                repos.append(dirname)
+        for dirname in dirnames[:]:
+            if not dirname.endswith(".git"):
+                continue  # Not a gitosis repository? -- ignore
             else:
-                to_recurse.append(dirname)
-        dirnames[:] = to_recurse
+                dirnames.remove(dirname)
 
-        for repo in repos:
-            name, ext = os.path.splitext(repo)
-            if reldir != '.':
-                name = os.path.join(reldir, name)
-            assert ext == '.git'
+            # Extract full repository name "foo.git" in directory "./bar"
+            # would become "bar/foo".
+            repo, _ = os.path.splitext(dirname)
+            repo = os.path.join(reldir, repo)
 
-            enable = _is_repo_export_ok(global_enable, config, name)
-            _set_export_ok_single(enable, name, dirpath, repo)
+            # Checking if ``gitdaemon`` is enabled for the processed
+            # repository.
+            enable = config.getboolean("repo {0}".format(repo),
+                                       "daemon", default=global_enable)
+
+            # Hardcore action.
+            export_one(os.path.join(dirpath, dirname), enable=enable)

@@ -26,6 +26,7 @@ def catch(func, ignore=[]):
     return inner
 
 
+walk = catch(os.walk, [errno.ENOENT])
 mkdir = catch(os.mkdir, [errno.EEXIST])
 unlink = catch(os.unlink, [errno.ENOENT])
 rmtree = catch(shutil.rmtree, [errno.ENOENT])
