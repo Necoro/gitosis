@@ -5,6 +5,8 @@ import subprocess
 import random
 
 from gitosis import repository
+from gitosis.exceptions import GitError
+
 
 from gitosis.test.util import (
     mkdir,
@@ -263,11 +265,10 @@ Frobitz the quux and eschew obfuscation.
 
 def test_has_initial_commit_fail_notAGitDir():
     tmp = maketemp()
-    e = assert_raises(
-        repository.GitRevParseError,
+    e = assert_raises(GitError,
         repository.has_initial_commit,
         git_dir=tmp)
-    eq(str(e), 'rev-parse failed: exit status 128')
+    eq(str(e), 'git rev-parse failed: exit status 128')
 
 def test_has_initial_commit_no():
     tmp = maketemp()

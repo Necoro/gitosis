@@ -7,15 +7,8 @@ import subprocess
 import sys
 
 from gitosis import util
+from gitosis.exceptions import GitosisError, GitError
 
-class GitError(Exception):
-    """git failed"""
-
-    def __str__(self):
-        return '%s: %s' % (self.__doc__, ': '.join(self.args))
-
-class GitInitError(Exception):
-    """git init failed"""
 
 def init(
     path,
@@ -58,12 +51,8 @@ def init(
         close_fds=True,
         )
     if returncode != 0: #pragma: no cover
-        raise GitInitError('exit status %d' % returncode)
+        raise GitError("init", 'exit status %d' % returncode)
 
-
-class GitFastImportError(GitError):
-    """git fast-import failed"""
-    pass
 
 def fast_import(
     git_dir,
@@ -121,18 +110,8 @@ from %(parent)s
     child.stdin.close()
     returncode = child.wait()
     if returncode != 0: #pragma: no cover
-        raise GitFastImportError(
-            'git fast-import failed', 'exit status %d' % returncode)
+        raise GitError("fast-import", 'exit status %d' % returncode)
 
-class GitExportError(GitError):
-    """Export failed"""
-    pass
-
-class GitReadTreeError(GitExportError):
-    """git read-tree failed"""
-
-class GitCheckoutIndexError(GitExportError):
-    """git checkout-index failed"""
 
 def export(git_dir, path):
     """Export a Git repository to a given path."""
@@ -147,7 +126,7 @@ def export(git_dir, path):
         close_fds=True,
         )
     if returncode != 0: #pragma: no cover
-        raise GitReadTreeError('exit status %d' % returncode)
+        raise GitError("read-tree", 'exit status %d' % returncode)
     # jumping through hoops to be compatible with git versions
     # that don't have --work-tree=
     env = {}
@@ -166,13 +145,8 @@ def export(git_dir, path):
         env=env,
         )
     if returncode != 0: #pragma: no cover
-        raise GitCheckoutIndexError('exit status %d' % returncode)
+        raise GitError("checkout-index", 'exit status %d' % returncode)
 
-class GitHasInitialCommitError(GitError):
-    """Check for initial commit failed"""
-
-class GitRevParseError(GitError):
-    """rev-parse failed"""
 
 def has_initial_commit(git_dir):
     """Check if a Git repo contains at least one commit linked by HEAD."""
@@ -190,10 +164,10 @@ def has_initial_commit(git_dir):
     got = child.stdout.read()
     returncode = child.wait()
     if returncode != 0:
-        raise GitRevParseError('exit status %d' % returncode)
+        raise GitError("rev-parse", 'exit status %d' % returncode)
     if got == 'HEAD\n':
         return False
     elif re.match('^[0-9a-f]{40}\n$', got):
         return True
     else: #pragma: no cover
-        raise GitHasInitialCommitError('Unknown git HEAD: %r' % got)
+        raise GitosisError('Unknown git HEAD: %r' % got)
