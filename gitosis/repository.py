@@ -1,6 +1,13 @@
+# -*- coding: utf-8 -*-
 """
-Gitosis functions for dealing with Git repositories.
+    gitosis.repository
+    ~~~~~~~~~~~~~~~~~~
+
+    This module implements functions for dealing with ``git`` repositories.
+
+    :license: GPL
 """
+
 import os
 import re
 import subprocess
@@ -10,48 +17,38 @@ from gitosis import util
 from gitosis.exceptions import GitosisError, GitError
 
 
-def init(
-    path,
-    template=None,
-    _git=None,
-    mode=0750,
-    ):
+def init(path, git=None, mode=0750, **kwargs):
+    """Create a git repository at `path` if missing.
+
+    .. note::
+
+       Leading directories of `path` must exist. Any extra keyword
+       arguments are passed to ``git init`` command, for example::
+
+           >>> init("/tmp/foo", template="/tmp/foo-template")
+
+       would result in the following call::
+
+           $ git --git-dir=. init --template=/tmp/foo-template
+
+    :param str path: path to repository to create.
+    :param int mode: access permission to set for the newly created repository.
     """
-    Create a git repository at C{path} (if missing).
+    git = git or "git"
 
-    Leading directories of C{path} must exist.
-
-    @param path: Path of repository create.
-
-    @type path: str
-
-    @param template: Template directory, to pass to C{git init}.
-
-    @type template: str
-
-    @param mode: Permissions for the new reposistory
-
-    @type mode: int
-    """
-    if _git is None:
-        _git = 'git'
-
+    # a) ensure repository directory is there.
     util.mkdir(path, mode)
-    args = [
-        _git,
-        '--git-dir=.',
-        'init',
-        ]
-    if template is not None:
-        args.append('--template=%s' % template)
-    returncode = subprocess.call(
-        args=args,
-        cwd=path,
-        stdout=sys.stderr,
-        close_fds=True,
-        )
-    if returncode != 0: #pragma: no cover
-        raise GitError("init", 'exit status %d' % returncode)
+
+    # b) call ``git init`` with any extra keyword arguments given
+    args = [git, "--git-dir=.", "init"]
+    for item in kwargs.iteritems():
+        args.append("--{0}={1}".format(*item))
+
+    code = subprocess.call(args=args, cwd=path,
+                           stdout=sys.stderr, close_fds=True)
+
+    if code:  # Make sure it worked.
+        raise GitError("init", "exit status {0}".format(code))
 
 
 def fast_import(
