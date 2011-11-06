@@ -1,125 +1,138 @@
+# -*- coding: utf-8 -*-
 """
-Generate ``cgit`` project list based on ``gitosis.conf``.
+    gitosis.cgit
+    ~~~~~~~~~~~~
 
-To plug this into ``cgit``, put in your global config file the
-following line::
+    A module which implemets functions for generating
+    `cgit <http://hjemli.net/git/cgit>`_ project list, based on the
+    contents of ``gitosis.conf``.
 
-  include=/path/to/your/repos.list
+    To plug this into `cgit`, put the following into your ``.cgitrc``::
+
+        include=/path/to/your/repos.list
+
+    :license: GPL
 """
 
-import os, urllib, logging
+from __future__ import with_statement
 
-from ConfigParser import NoSectionError, NoOptionError
+import logging
+import os
+import operator
+import re
+import subprocess
+from cStringIO import StringIO
 
-from gitosis import util
-from gitosis.configutil import getboolean_default, get_default
 
-field_map={'description':'repo.desc',
-           'owner':'repo.owner',
-           'readme':'repo.readme',
-           'filter':'repo.source-filter',
-           'defbranch':'repo.defbranch'
-           }
+#: Logger for ``cgit`` module.
+log = logging.getLogger("gitosis.cgit")
 
-def generate_project_list_fp(config, fp):
-    """
-    Generate projects list for ``cgit``.
+#: A mapping of fields from ``gitosis.conf`` to fields in
+#: ``project.list``.
+optional_fields = {"description": "repo.desc",
+                   "owner": "repo.owner",
+                   "readme": "repo.readme",
+                   "filter": "repo.source-filter",
+                   "defbranch": "repo.defbranch"}
 
-    :param config: configuration to read projects from
-    :type config: RawConfigParser
 
-    :param fp: writable for ``repos.list``
-    :type fp: (file-like, anything with ``.write(data)``)
-    """
-    log = logging.getLogger('gitosis.cgit.generate_projects_list')
-
-    repositories = util.getRepositoryDir(config)
-
-    global_enable = getboolean_default(config, 'gitosis', 'cgit', False)
-    grouped_sections={}
+def find_repositories(config):
+    """Returns a mapping of gitosis repositories, grouped by ``cgit_group``."""
+    repos = {}  # Grouped by ``cgit_group``.
+    global_enable = config.getboolean("gitosis", "cgit", default=False)
 
     for section in config.sections():
-        sectiontitle = section.split(None, 1)
-        if not sectiontitle or sectiontitle[0] != 'repo':
+        data = section.split(" ", 1)
+        if not data or data[0] != "repo":
             continue
 
-        enable = getboolean_default(config, section, 'cgit', global_enable)
-
-        if not enable:
+        if not config.getboolean(section, "cgit", default=global_enable):
             continue
-        groupname = get_default(config, section, 'cgit_group', "")
-        grouped_sections.setdefault(groupname,[]).append(section)
 
-    for groupname, group in grouped_sections.iteritems():
-        if groupname:
-            print >> fp, 'section=%s'%(groupname)
+        cgit_group = config.get(section, "cgit_group", default="")
+        cgit_name  = config.get(section, "cgit_name", default=data[1])
+        repos.setdefault(cgit_group, []).append((cgit_name, section))
+    else:
+        return repos.iteritems()
 
-        for section in group:
-            sectiontitle = section.split(None, 1)
 
-            name = sectiontitle[1]
+def find_readme(path, treeish="master"):
+    git = subprocess.Popen(["git", "ls-tree",
+                            "-r",  # Recurse into subdirectories.
+                            "--name-only",
+                            treeish],
+                            cwd=path,
+                            env={"GIT_DIR": path},
+                            stdout=subprocess.PIPE,
+                            close_fds=True)
 
-            fullpath = _repository_path(log, repositories, name, name)
+    for fname in git.stdout.read().splitlines():
+        if re.match("(?i)readme", fname):
+            # The latest version of ``cgit`` seems to refuse readme
+            # without refspec.
+            return "{0}:{1}".format(treeish, fname)
 
-            print >> fp, 'repo.url=%s.git'%(name)
-            print >> fp, 'repo.name=%s' % name
 
-            if fullpath is None:
+def generate_project(name, section, buf, config):
+    _, path = section.split(" ", 1)
+    base_path = config.repository_dir
+
+    # ``gitsis`` requires all repositories to have a .git suffix.
+    if not path.endswith(".git"):
+        path += ".git"
+
+    if not os.path.exists(os.path.join(base_path, path)):
+        log.debug("Repo {0} doesn't exist @ {1}.".format(path, base_path))
+        return
+
+    repo = [
+        ("repo.url", path),
+        ("repo.name", name),
+        ("repo.path", os.path.join(base_path, path)),
+    ]
+
+    # Now add optional fields if any is available ...
+    for name in optional_fields:
+        value = config.get(section, name)
+        if not value:
+            # If readme is not explicitly given, try to guess it.
+            if name == "readme":
+                value = find_readme(os.path.join(base_path, path))
+            else:
                 continue
 
-            print >> fp, 'repo.path=%s'%(fullpath)
+        if value:
+            repo.append((optional_fields[name], value))
 
-            for field_pair in field_map.iteritems():
-                try:
-                    field_value = config.get(section, field_pair[0])
-                except (NoSectionError, NoOptionError):
-                    continue
-                else:
-                    print >> fp, '%s=%s'%(field_pair[1],field_value)
+    # ... and write everything to the buffer.
+    for item in repo:
+        buf.write("{0}={1}".format(*item) + os.linesep)
+    else:
+        buf.write(os.linesep)
 
-def _repository_path(log, repositories, name, default_value):
-    """
-    Check if the repository exists by the common name, or with a .git suffix,
-    and return the full pathname.
-    """
-    if not name.endswith(".git"):
-        name += ".git"
-
-    fullpath=os.path.join(repositories, name)
-    if not os.path.exists(fullpath):
-        log.warning(
-                'Cannot find %(name)r in %(repositories)r'
-                % dict(name=name, repositories=repositories))
-        return None
-    return fullpath
-
-#        namedotgit = '%s.git' % name
-#        fullpath=os.path.join(repositories, namedotgit)
-#        if os.path.exists(fullpath):
-#            return fullpath
-#        else:
-#            log.warning(
-#                    'Cannot find %(name)r in %(repositories)r'
-#                    % dict(name=name, repositories=repositories))
-#            return None
-#    return fullpath
 
 def generate_project_list(config, path):
-    """
-    Generate projects list for ``cgit``.
+    log.debug("Generating `repos.list` file @ {0}.".format(path))
+    buf = StringIO()  # Write to a temporary buffer.
 
-    :param config: configuration to read projects from
-    :type config: RawConfigParser
+    for cgit_group, repos in find_repositories(config):
+        log.debug("Found {0!r} for cgit group {1!r}."
+                  .format(map(operator.itemgetter(0), repos), cgit_group))
+        if cgit_group:
+            buf.write("section={0}".format(cgit_group) +
+                      os.linesep)
+            buf.write(os.linesep)
 
-    :param path: path to write projects list to
-    :type path: str
-    """
-    tmp = '%s.%d.tmp' % (path, os.getpid())
+        map(lambda (name, section): generate_project(name,
+                                                     section,
+                                                     buf, config),
+            repos)
 
-    fp = file(tmp, 'w')
-    try:
-        generate_project_list_fp(config=config, fp=fp)
-    finally:
+    log.debug("Saving to {0} ...".format(path))
+    with open(path, "w") as fp:
+        fp.write(buf.getvalue())
         fp.close()
+    log.debug("Done.")
 
-    os.rename(tmp, path)
+
+logging.basicConfig()

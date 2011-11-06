@@ -1,8 +1,8 @@
 from nose.tools import eq_ as eq, assert_raises
 
-from ConfigParser import RawConfigParser
-
 from gitosis import group
+from gitosis.config import GitosisRawConfigParser as RawConfigParser
+
 
 def test_no_emptyConfig():
     cfg = RawConfigParser()

@@ -4,10 +4,10 @@ from gitosis.test.util import assert_raises
 import logging
 import os
 from cStringIO import StringIO
-from ConfigParser import RawConfigParser
 
 from gitosis import serve
 from gitosis import repository
+from gitosis.config import GitosisRawConfigParser as RawConfigParser
 
 from gitosis.test import util
 
@@ -592,6 +592,5 @@ def test_typo_writeable():
     handler.flush()
     eq(
         buf.getvalue(),
-        "Repository 'foo' config has typo \"writeable\", shou"
-        +"ld be \"writable\"\n",
-        )
+        """Repository 'foo' config has typo "writeable", should be "writable"
+""")

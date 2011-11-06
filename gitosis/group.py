@@ -2,8 +2,7 @@
 Gitosis functions to find what groups a given user belongs to.
 """
 import logging
-from ConfigParser import NoSectionError, NoOptionError
-        
+
 _GROUP_PREFIX = 'group '
 
 def _getMembership(config, user, seen):
@@ -25,12 +24,7 @@ def _getMembership(config, user, seen):
         if group in seen:
             continue
 
-        try:
-            members = config.get(section, 'members')
-        except (NoSectionError, NoOptionError):
-            members = []
-        else:
-            members = members.split()
+        members = config.get(section, 'members', "").split()
 
         # @all is the only group where membership needs to be
         # bootstrapped like this, anything else gets started from the

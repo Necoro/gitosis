@@ -1,69 +1,55 @@
+# -*- coding: utf-8 -*-
 """
-Gitosis functions for dealing with Git repositories.
+    gitosis.repository
+    ~~~~~~~~~~~~~~~~~~
+
+    This module implements functions for dealing with ``git`` repositories.
+
+    :license: GPL
 """
+
 import os
 import re
 import subprocess
 import sys
 
 from gitosis import util
+from gitosis.exceptions import GitosisError, GitError
 
-class GitError(Exception):
-    """git failed"""
 
-    def __str__(self):
-        return '%s: %s' % (self.__doc__, ': '.join(self.args))
+def init(path, git=None, mode=0750, **kwargs):
+    """Create a git repository at `path` if missing.
 
-class GitInitError(Exception):
-    """git init failed"""
+    .. note::
 
-def init(
-    path,
-    template=None,
-    _git=None,
-    mode=0750,
-    ):
+       Leading directories of `path` must exist. Any extra keyword
+       arguments are passed to ``git init`` command, for example::
+
+           >>> init("/tmp/foo", template="/tmp/foo-template")
+
+       would result in the following call::
+
+           $ git --git-dir=. init --template=/tmp/foo-template
+
+    :param str path: path to repository to create.
+    :param int mode: access permission to set for the newly created repository.
     """
-    Create a git repository at C{path} (if missing).
+    git = git or "git"
 
-    Leading directories of C{path} must exist.
-
-    @param path: Path of repository create.
-
-    @type path: str
-
-    @param template: Template directory, to pass to C{git init}.
-
-    @type template: str
-
-    @param mode: Permissions for the new reposistory
-
-    @type mode: int
-    """
-    if _git is None:
-        _git = 'git'
-
+    # a) ensure repository directory is there.
     util.mkdir(path, mode)
-    args = [
-        _git,
-        '--git-dir=.',
-        'init',
-        ]
-    if template is not None:
-        args.append('--template=%s' % template)
-    returncode = subprocess.call(
-        args=args,
-        cwd=path,
-        stdout=sys.stderr,
-        close_fds=True,
-        )
-    if returncode != 0: #pragma: no cover
-        raise GitInitError('exit status %d' % returncode)
 
+    # b) call ``git init`` with any extra keyword arguments given
+    args = [git, "--git-dir=.", "init"]
+    for item in kwargs.iteritems():
+        args.append("--{0}={1}".format(*item))
 
-class GitFastImportError(GitError):
-    """git fast-import failed"""
-    pass
+    code = subprocess.call(args=args, cwd=path,
+                           stdout=sys.stderr, close_fds=True)
+
+    if code:  # Make sure it worked.
+        raise GitError("init", "exit status {0}".format(code))
+
 
 def fast_import(
     git_dir,
@@ -121,18 +107,8 @@ from %(parent)s
     child.stdin.close()
     returncode = child.wait()
     if returncode != 0: #pragma: no cover
-        raise GitFastImportError(
-            'git fast-import failed', 'exit status %d' % returncode)
+        raise GitError("fast-import", 'exit status %d' % returncode)
 
-class GitExportError(GitError):
-    """Export failed"""
-    pass
-
-class GitReadTreeError(GitExportError):
-    """git read-tree failed"""
-
-class GitCheckoutIndexError(GitExportError):
-    """git checkout-index failed"""
 
 def export(git_dir, path):
     """Export a Git repository to a given path."""
@@ -147,7 +123,7 @@ def export(git_dir, path):
         close_fds=True,
         )
     if returncode != 0: #pragma: no cover
-        raise GitReadTreeError('exit status %d' % returncode)
+        raise GitError("read-tree", 'exit status %d' % returncode)
     # jumping through hoops to be compatible with git versions
     # that don't have --work-tree=
     env = {}
@@ -166,13 +142,8 @@ def export(git_dir, path):
         env=env,
         )
     if returncode != 0: #pragma: no cover
-        raise GitCheckoutIndexError('exit status %d' % returncode)
+        raise GitError("checkout-index", 'exit status %d' % returncode)
 
-class GitHasInitialCommitError(GitError):
-    """Check for initial commit failed"""
-
-class GitRevParseError(GitError):
-    """rev-parse failed"""
 
 def has_initial_commit(git_dir):
     """Check if a Git repo contains at least one commit linked by HEAD."""
@@ -190,10 +161,10 @@ def has_initial_commit(git_dir):
     got = child.stdout.read()
     returncode = child.wait()
     if returncode != 0:
-        raise GitRevParseError('exit status %d' % returncode)
+        raise GitError("rev-parse", 'exit status %d' % returncode)
     if got == 'HEAD\n':
         return False
     elif re.match('^[0-9a-f]{40}\n$', got):
         return True
     else: #pragma: no cover
-        raise GitHasInitialCommitError('Unknown git HEAD: %r' % got)
+        raise GitosisError('Unknown git HEAD: %r' % got)

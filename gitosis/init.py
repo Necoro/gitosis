@@ -9,7 +9,6 @@ import sys
 from pkg_resources import resource_filename
 from cStringIO import StringIO
 
-from gitosis import configutil
 from gitosis import repository
 from gitosis import run_hook
 from gitosis import sshkey
@@ -73,7 +72,7 @@ def init_admin_repository(git_dir, pubkey, user, config):
         config.set('group gitosis-admin', 'writable', 'gitosis-admin')
 
     # Make sure the admin user is in the admin list, else they will lock themselves out!
-    adminlist = configutil.get_default(config, 'group gitosis-admin', 'members',' ').split()
+    adminlist = config.get('group gitosis-admin', 'members', default=' ').split()
     if user not in adminlist:
         adminlist.append(user)
         config.set('group gitosis-admin', 'members', ' '.join(adminlist))
@@ -146,10 +145,10 @@ class Main(app.App):
             sys.exit(1)
         log.info('Admin user is %r', user)
         log.info('Creating generated files directory...')
-        generated = util.getGeneratedFilesDir(config=cfg)
+        generated = cfg.generated_files_dir
         util.mkdir(generated)
         log.info('Creating repository structure...')
-        repositories = util.getRepositoryDir(cfg)
+        repositories = cfg.repository_dir
         util.mkdir(repositories)
         admin_repository = os.path.join(repositories, 'gitosis-admin.git')
         init_admin_repository(

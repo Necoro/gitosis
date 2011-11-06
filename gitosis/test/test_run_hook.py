@@ -1,10 +1,10 @@
 from nose.tools import eq_ as eq
 
 import os
-from ConfigParser import RawConfigParser
 from cStringIO import StringIO
 
 from gitosis import init, repository, run_hook
+from gitosis.config import GitosisRawConfigParser as RawConfigParser
 from gitosis.test.util import maketemp, readFile
 
 def test_post_update_simple():

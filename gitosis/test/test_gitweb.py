@@ -1,10 +1,10 @@
 from nose.tools import eq_ as eq
 
 import os
-from ConfigParser import RawConfigParser
 from cStringIO import StringIO
 
 from gitosis import gitweb
+from gitosis.config import GitosisRawConfigParser as RawConfigParser
 from gitosis.test.util import mkdir, maketemp, readFile, writeFile
 
 def test_projectsList_empty():
@@ -64,8 +64,8 @@ def test_projectsList_multiple():
         config=cfg,
         fp=got)
     eq(got.getvalue(), '''\
-quux
 foo%2Fbar John+Doe
+quux
 ''')
 
 def test_projectsList_multiple_globalGitwebYes():
@@ -85,8 +85,8 @@ def test_projectsList_multiple_globalGitwebYes():
         config=cfg,
         fp=got)
     eq(got.getvalue(), '''\
-quux
 foo%2Fbar John+Doe
+quux
 ''')
 
 def test_projectsList_reallyEndsWithGit():
