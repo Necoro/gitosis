@@ -204,7 +204,7 @@ Additionally you can set ``description``, ``owner``, ``readme`` (being
 a path to a file, which will be included in the about section of this
 repository), ``cgit_group`` (specifying the group/section this
 repository belongs to), ``cgit_name`` (specifying repository name,
-displayed in cgit web intergace) and ``defbranch`` (the default branch)
+displayed in cgit web interface) and ``defbranch`` (the default branch)
 for each of the repositories.
 
 .. note::

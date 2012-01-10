@@ -76,7 +76,7 @@ def generate_project(name, section, buf, config):
     _, path = section.split(" ", 1)
     base_path = config.repository_dir
 
-    # ``gitsis`` requires all repositories to have a .git suffix.
+    # ``gitosis`` requires all repositories to have a .git suffix.
     if not path.endswith(".git"):
         path += ".git"
 
