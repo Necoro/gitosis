@@ -18,7 +18,6 @@ from __future__ import with_statement
 
 import logging
 import os
-import operator
 import re
 import subprocess
 from cStringIO import StringIO
@@ -117,16 +116,14 @@ def generate_project_list(config, path):
 
     for cgit_group, repos in find_repositories(config):
         log.debug("Found {0!r} for cgit group {1!r}."
-                  .format(map(operator.itemgetter(0), repos), cgit_group))
+                  .format([x[0] for x in repos], cgit_group))
         if cgit_group:
             buf.write("section={0}".format(cgit_group) +
                       os.linesep)
             buf.write(os.linesep)
 
-        map(lambda (name, section): generate_project(name,
-                                                     section,
-                                                     buf, config),
-            repos)
+        for (name, section) in repos:
+            generate_project(name, section, buf, config)
 
     log.debug("Saving to {0} ...".format(path))
     with open(path, "w") as fp:
